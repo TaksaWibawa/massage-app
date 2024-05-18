@@ -1,0 +1,9 @@
+# PyCache
+__pycache__/
+
+# env
+venv/
+*.env
+
+# database
+*.sqlite3
