@@ -1,3 +1,7 @@
 Django==4.2
 django-crispy-forms==2.1
 django-jazzmin==3.0.0
+django-environ==0.11.2
+psycopg2==2.9.9
+django-bootstrap-v5==1.0.11
+fontawesomefree==6.5.1

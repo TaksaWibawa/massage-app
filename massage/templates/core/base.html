@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}Base Title{% endblock %}
+    </title>
+    {% load bootstrap5 %}
+    {% bootstrap_css %} {% bootstrap_javascript %}
+    {% load static %}
+    <link rel="stylesheet"
+          type="text/css"
+          href="{% static 'massage/css/styles.css' %}" />
+    <link href="{% static 'fontawesomefree/css/fontawesome.css' %}"
+          rel="stylesheet"
+          type="text/css" />
+    <link href="{% static 'fontawesomefree/css/solid.css' %}"
+          rel="stylesheet"
+          type="text/css" />
+  </head>
+  <body>
+    <div class="container-fluid wrapper">
+      <header class="d-flex justify-content-start align-items-center">
+        <button class="btn bg-bg-transparent d-block p-0"
+                type="button"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#drawer"
+                aria-controls="drawer">
+          <img src="{% static 'massage/images/menu 1.svg' %}"
+               alt="Menu"
+               width="50"
+               height="50" />
+        </button>
+        <h1 class="w-100 text-center text-wrap">
+          {% block pageTitle %}
+            Base Page Title
+          {% endblock pageTitle %}
+        </h1>
+      </header>
+      <main class="content-wrapper">
+        {% block content %}
+          Base Content
+        {% endblock content %}
+      </main>
+      <aside class="offcanvas offcanvas-start"
+             tabindex="-1"
+             id="drawer"
+             aria-labelledby="drawerLabel">
+        <div class="offcanvas-header">
+          <h5 class="offcanvas-title" id="drawerLabel">MENU</h5>
+          <button type="button"
+                  class="btn-close btn-close-white text-reset"
+                  data-bs-dismiss="offcanvas"
+                  aria-label="Close"></button>
+        </div>
+        <nav class="offcanvas-body">
+          <ul class="navbar-nav">
+            {% for menu in MENU_ITEMS %}
+              {% for key, value in menu.items %}
+                <div class="menu" onclick="toggleSubmenu(this)">
+                  <div class="menu-toggle">
+                    <i class="fa-solid fa-play"></i>
+                    <span class="menu-heading">{{ key }}</span>
+                  </div>
+                  <ul class="submenu-list" style="display: none">
+                    {% for item in value %}
+                      <li>
+                        <a href="{% url item.url %}" class="submenu-item">{{ item.name }}</a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {% endfor %}
+            {% endfor %}
+          </ul>
+        </nav>
+      </aside>
+      <div class="circle circle-top-left"></div>
+      <div class="circle circle-bottom-right"></div>
+    </div>
+    <script src="{% static 'massage/js/scripts.js' %}"></script>
+  </body>
+</html>

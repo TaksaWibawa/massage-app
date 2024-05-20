@@ -1,0 +1,17 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}Landing Page{% endblock %}
+{% block pageTitle %}
+  Landing Page
+{% endblock pageTitle %}
+{% block content %}
+  <section class="section-wrapper">
+    <div class="image-wrapper">
+      <img src="{% static 'massage/images/woman-relaxing-spa 1.png' %}"
+           alt="Massage" />
+    </div>
+    <p class="text-wrap">
+      Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
+    </p>
+  </section>
+{% endblock %}

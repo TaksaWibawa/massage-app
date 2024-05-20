@@ -1,0 +1,154 @@
+@import url('https://fonts.googleapis.com/css2?family=Nova+Slim&family=Montserrat:wght@400;500;600&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Montserrat', sans-serif;
+  background-color: white;
+  color: #1A1918;
+}
+
+h1 {
+  font-family: 'Nova Slim', sans-serif;
+  font-size: 35px;
+  color: #724212;
+}
+
+p {
+  font-size: 18px;
+  font-weight: 500;
+  margin: 0;
+}
+
+.btn:focus, .btn:active, .btn-close:focus, .btn-close:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.wrapper {
+  display: grid;
+  grid-template-rows: auto 1fr;
+  margin: 0;
+  min-height: 100vh;
+  overflow-x: hidden;
+  padding-block: 50px;
+  padding-inline: 25px;
+  position: relative;
+  row-gap: 24px;
+}
+
+.content-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  position: relative;
+}
+
+.section-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.image-wrapper {
+  width: 100%;
+  height: fit-content;
+}
+
+.image-wrapper img {
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.circle {
+  width: 350px;
+  height: 350px;
+  background-color: rgba(126, 169, 209, 0.506);
+  filter: blur(100px);
+  z-index: -999;
+  position: absolute;
+}
+
+.circle-top-left {
+  border-bottom-right-radius: 100%;
+  top: 0;
+  left: 0;
+}
+
+.circle-bottom-right {
+  border-top-left-radius: 100%;
+  bottom: 0;
+  right: 0;
+}
+
+.offcanvas {
+  width: 50%;
+  background-color: #5291AC;
+  color: white;
+  padding-block: 50px;
+}
+.offcanvas-header{
+  border-bottom: 1px solid white;
+}
+
+.offcanvas-title {
+  color: white;
+  font-weight: 600;
+}
+
+.offcanvas-body {
+  border-bottom: 1px solid white;
+}
+
+.navbar-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.menu{
+  width: fit-content;
+}
+
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+  width: fit-content;
+}
+
+.menu-toggle:hover {
+  cursor: pointer;
+}
+
+.menu-toggle span {
+  font-weight: 400;
+  margin: 0;
+}
+
+.submenu-list {
+  margin-left: 8px;
+}
+
+.submenu-list li {
+  list-style: none;
+  margin-bottom: 8px;
+}
+
+.submenu-list a {
+  font-size: 12px;
+  color: white;
+  text-decoration: none;
+}
+
+.submenu-list a:hover {
+  text-decoration: underline;
+}
