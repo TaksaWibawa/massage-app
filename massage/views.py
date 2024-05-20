@@ -1,4 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
+from .models import Employee
+from .forms import EmployeeForm
 
 # Dashboard
 def LandingPage(request):
@@ -18,14 +20,22 @@ def NewAssignmentPage(request):
 
 # Employees
 def EmployeeListPage(request):
-    return render(request, 'dashboard/employee_list.html')
+    employees = employees = Employee.objects.all()
+    return render(request, 'employees/employee_list.html', {'employees': employees})
 
 def EmployeeNewPage(request):
-    return render(request, 'dashboard/employee_new.html')
+    if request.method == 'POST':
+        form = EmployeeForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return redirect('employee_list')
+    else:
+        form = EmployeeForm()
+    return render(request, 'employees/employee_new.html')
 
 # Services
 def ServiceListPage(request):
-    return render(request, 'dashboard/service_list.html')
+    return render(request, 'services/service_list.html')
 
 def ServiceNewPage(request):
-    return render(request, 'dashboard/service_new.html')
+    return render(request, 'services/service_new.html')

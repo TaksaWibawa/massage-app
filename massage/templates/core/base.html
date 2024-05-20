@@ -79,6 +79,8 @@
       <div class="circle circle-top-left"></div>
       <div class="circle circle-bottom-right"></div>
     </div>
-    <script src="{% static 'massage/js/scripts.js' %}"></script>
+    {% block scripts %}
+      <script src="{% static 'massage/js/scripts.js' %}"></script>
+    {% endblock scripts %}
   </body>
 </html>
