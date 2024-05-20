@@ -1,0 +1,60 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}
+  New Employee
+{% endblock title %}
+{% block pageTitle %}
+  New Employee
+{% endblock pageTitle %}
+{% block content %}
+  <section class="section-wrapper justify-content-start mt-5 px-4 w-100">
+    <form method="post" enctype="multipart/form-data" class="form-wrapper">
+      {% csrf_token %}
+      <div class="file-uploader">
+        <label for="image-upload">
+          <img src="{% static 'massage/images/image-upload.svg' %}"
+               alt="Profile Image">
+        </label>
+        <input type="file"
+               name="image-upload"
+               id="image-upload"
+               class="form-control"
+               required
+               accept="image/*">
+      </div>
+      <div class="input-wrapper">
+        <label for="name">Name</label>
+        <input type="text" name="name" id="name" class="form-control" required>
+      </div>
+      <div class="input-wrapper">
+        <label for="phone">Tlp. Number</label>
+        <input type="text" name="phone" id="phone" class="form-control" required>
+      </div>
+      <div class="input-wrapper">
+        <label for="address">Address</label>
+        <input type="text" name="address" id="address" class="form-control" required>
+      </div>
+      <div class="input-wrapper">
+        <label for="age">Age</label>
+        <input type="number" name="age" id="age" class="form-control" required>
+      </div>
+      <button type="submit" class="btn submit-button">Submit</button>
+    </form>
+  </section>
+
+  <script>
+    const fileInput = document.getElementById('image-upload');
+    const img = document.querySelector('.file-uploader img');
+    fileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function() {
+          img.src = reader.result;
+        }
+        img.style.borderRadius = '50%';
+        reader.readAsDataURL(file);
+      }
+    });
+  </script>
+{% endblock %}
