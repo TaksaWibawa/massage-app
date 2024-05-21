@@ -1,9 +1,32 @@
-from django import forms
+from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
-from django.core.exceptions import ValidationError
-from .models import Employee
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate
+from django import forms
+from .models import Role, Employee
 
+class UserAdminForm(UserCreationForm):
+    role = forms.ModelChoiceField(queryset=Role.objects.all())
+
+    class Meta(UserCreationForm.Meta):
+        fields = UserCreationForm.Meta.fields + ('role',)
+
+class LoginForm(AuthenticationForm):
+    class Meta:
+        model = User
+        fields = ['username', 'password']
+    
+    def clean(self):
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+        user = authenticate(username=username, password=password)
+        if user is None:
+            print("Invalid username or password")
+            raise ValidationError("Invalid username or password")
+        self.user = user
+        return self.cleaned_data
+        
 class EmployeeForm(forms.ModelForm):
     username = forms.CharField()
     password = forms.CharField(widget=forms.PasswordInput)

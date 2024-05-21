@@ -201,6 +201,24 @@ p {
   gap: 24px;
 }
 
+.form-auth-wrapper {
+  padding: 24px;
+  min-height: 100vh;
+  justify-content: center;
+  display: flex;
+  background-color: rgba(126, 169, 209, 0.806);
+  align-items: center;
+}
+
+.form-signin {
+  padding: 24px;
+  gap: 24px;
+  flex-direction: column;
+  display: flex;
+  border-radius: 16px;
+  background-color: white;
+}
+
 .file-uploader {
   display: flex;
   justify-content: center;

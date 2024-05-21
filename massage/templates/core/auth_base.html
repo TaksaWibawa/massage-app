@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>
+      {% block title %}Base Title{% endblock %}
+    </title>
+    {% load bootstrap5 %}
+    {% bootstrap_css %} {% bootstrap_javascript %}
+    {% load static %}
+    <link rel="stylesheet"
+          type="text/css"
+          href="{% static 'massage/css/styles.css' %}" />
+  </head>
+  <body>
+    <div class="container-fluid form-auth-wrapper">
+      <main class="form-signin">
+        {% block content %}{% endblock %}
+      </main>
+    </div>
+    {% block scripts %}
+      <script src="{% static 'massage/js/scripts.js' %}"></script>
+    {% endblock scripts %}
+  </body>
+</html>

@@ -50,11 +50,11 @@ class Employee(Auditable):
 
     # Main fields
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, default='Employee')
     image = models.ImageField(upload_to='static/massage/images/employees/', default='static/massage/images/profile-placeholder.svg')
-    phone = models.CharField(max_length=20)
-    address = models.TextField()
-    age = models.IntegerField()
+    phone = models.CharField(max_length=20, default='0')
+    address = models.TextField(default='Address')
+    age = models.IntegerField(default=0)
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=default_user)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, default=default_role)
 
