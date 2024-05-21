@@ -31,7 +31,7 @@ def EmployeeNewPage(request):
             return redirect('employee_list')
     else:
         form = EmployeeForm()
-    return render(request, 'employees/employee_new.html')
+    return render(request, 'employees/employee_new.html', {'form': form})
 
 # Services
 def ServiceListPage(request):

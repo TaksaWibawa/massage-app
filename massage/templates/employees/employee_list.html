@@ -11,10 +11,9 @@
     <ul class="list-wrapper">
       {% for employee in employees %}
         <li class="employee">
-          <img src="{{ employee.image }}"
-               alt="{{ employee.name }}"
-               width="100"
-               height="100">
+          <div class="employee-image">
+            <img src="{{ employee.image.url }}" alt="{{ employee.name }}">
+          </div>
           <div class="employee-info">
             <h2>{{ employee.name }}</h2>
             <p>{{ employee.phone }}</p>
