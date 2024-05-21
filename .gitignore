@@ -8,6 +8,7 @@ venv/
 # database
 *.sqlite3
 static/massage/images/employees/
+static/massage/images/services/
 
 # development
 .vscode/

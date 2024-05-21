@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
-from .models import Employee
-from .forms import LoginForm, EmployeeForm
+from .models import Employee, Service
+from .forms import LoginForm, EmployeeForm, ServiceForm
 from .decorator import supervisor_required, auth_required, protected
 
 # Auth
@@ -40,7 +40,7 @@ def NewAssignmentPage(request):
 # Employees
 @supervisor_required(allowed_roles=['supervisor'])
 def EmployeeListPage(request):
-    employees = employees = Employee.objects.all()
+    employees = Employee.objects.all()
     return render(request, 'employees/employee_list.html', {'employees': employees})
 
 @supervisor_required(allowed_roles=['supervisor'])
@@ -57,8 +57,16 @@ def EmployeeNewPage(request):
 # Services
 @supervisor_required(allowed_roles=['supervisor'])
 def ServiceListPage(request):
-    return render(request, 'services/service_list.html')
+    services = Service.objects.all()
+    return render(request, 'services/service_list.html', {'services': services})
 
 @supervisor_required(allowed_roles=['supervisor'])
 def ServiceNewPage(request):
+    if request.method == 'POST':
+        form = ServiceForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('service_list')
+    else:
+        form = ServiceForm()
     return render(request, 'services/service_new.html')

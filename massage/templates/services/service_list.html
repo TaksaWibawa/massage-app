@@ -1,23 +1,24 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load price_filters %}
 {% block title %}
-  Employee List
+  List Price & Duration
 {% endblock title %}
 {% block pageTitle %}
-  Employee List
+  List Price & Duration
 {% endblock pageTitle %}
 {% block content %}
   <section class="section-wrapper justify-content-start mt-5 px-3">
     <ul class="list-wrapper">
-      {% for employee in employees %}
+      {% for service in services %}
         <li class="info-card">
-          <div class="info-card-image">
-            <img src="{{ employee.image.url }}" alt="{{ employee.name }}">
+          <div class="info-card-service">
+            <img src="{{ service.image.url }}" alt="{{ service.name }}">
           </div>
           <div class="info-card-content">
-            <h2>{{ employee.name }}</h2>
-            <p>{{ employee.phone }}</p>
-            <p>{{ employee.address }}</p>
+            <h2>{{ service.name }}</h2>
+            <p>{{ service.price|currency }}</p>
+            <p>{{ service.duration }} mins.</p>
           </div>
         </li>
       {% endfor %}

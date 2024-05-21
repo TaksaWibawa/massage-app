@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 
 from django.contrib.auth.models import User
-from .models import Role, Employee
+from .models import Role, Employee, Service
 from .forms import UserAdminForm
 
 
@@ -49,16 +49,18 @@ class UserAdmin(DefaultUserAdmin):
         obj.save()
         Employee.objects.get_or_create(user=obj, defaults={'role': role})
 
+class RoleAdmin(admin.ModelAdmin):
+    list_display = ['id', 'name']
 
 class EmployeeAdmin(AuditableAdmin):
     list_display = ['name', 'phone', 'address',
                     'age', 'role'] + AuditableAdmin.list_display
 
-class RoleAdmin(admin.ModelAdmin):
-    list_display = ['id', 'name']
-
+class ServiceAdmin(AuditableAdmin):
+    list_display = ['name', 'price', 'duration'] + AuditableAdmin.list_display
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(Employee, EmployeeAdmin)
+admin.site.register(Service, ServiceAdmin)

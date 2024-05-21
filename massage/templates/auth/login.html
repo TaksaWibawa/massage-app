@@ -1,14 +1,11 @@
 {% extends "core/auth_base.html" %}
-
 {% block title %}Login{% endblock %}
-
 {% block content %}
   <div class="text-center">
     <h1 class="mb-2">Massage</h1>
     <p>Please enter your login credentials.</p>
   </div>
-  <form method="post"
-        class="form-wrapper">
+  <form method="post" class="form-wrapper">
     {% csrf_token %}
     <div class="input-wrapper">
       <label for="username">Username</label>

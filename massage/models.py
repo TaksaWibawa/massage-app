@@ -66,3 +66,30 @@ class Employee(Auditable):
 
     def __str__(self):
         return self.user.username
+    
+# Model for service management
+class Service(Auditable):
+    # Default values
+    def default_admin():
+        if User.objects.filter(username__iexact='admin').exists():
+            return User.objects.get(username__iexact='admin').id
+        else:
+            user = User.objects.create(username='admin', password=make_password('admin'))
+            user.save()
+            return user.id
+
+    # Main fields
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    image = models.ImageField(upload_to='static/massage/images/services/', default='static/massage/images/woman-relaxing-spa 1.png')
+    name = models.CharField(max_length=100, default='Service')
+    price = models.IntegerField(default=0)
+    duration = models.IntegerField(default=0)
+
+    # Audit fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_created_by', default=default_admin)
+    last_updated_at = models.DateTimeField(auto_now=True)
+    last_updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='service_last_updated_by', default=default_admin)
+
+    def __str__(self):
+        return self.name
