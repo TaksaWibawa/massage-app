@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import login
 from .models import Employee, Service
-from .forms import LoginForm, EmployeeForm, ServiceForm
+from .forms import LoginForm, EmployeeForm, ServiceForm, AssignmentForm
 from .decorator import supervisor_required, auth_required, protected
 
 # Auth
@@ -35,12 +35,19 @@ def ReportPage(request):
 
 @supervisor_required(allowed_roles=['supervisor'])
 def NewAssignmentPage(request):
-    return render(request, 'dashboard/new_assignment.html')
+    if request.method == 'POST':
+        form = AssignmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('/')
+    else:
+        form = AssignmentForm()
+    return render(request, 'dashboard/assignment_new.html', {'form': form})
 
 # Employees
 @supervisor_required(allowed_roles=['supervisor'])
 def EmployeeListPage(request):
-    employees = Employee.objects.all()
+    employees = Employee.objects.filter(role__name='employee')
     return render(request, 'employees/employee_list.html', {'employees': employees})
 
 @supervisor_required(allowed_roles=['supervisor'])
@@ -63,10 +70,10 @@ def ServiceListPage(request):
 @supervisor_required(allowed_roles=['supervisor'])
 def ServiceNewPage(request):
     if request.method == 'POST':
-        form = ServiceForm(request.POST)
+        form = ServiceForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
             return redirect('service_list')
     else:
         form = ServiceForm()
-    return render(request, 'services/service_new.html')
+    return render(request, 'services/service_new.html', {'form': form})

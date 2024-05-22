@@ -241,7 +241,8 @@ p {
 }
 
 .file-uploader input[type="file"] {
-  display: none;
+  position: absolute;
+  opacity: 0;
 }
 
 .file-uploader img {
@@ -267,12 +268,58 @@ p {
   padding-inline: 0;
 }
 
-
 .input-wrapper input:focus, .input-wrapper input:active {
   outline: none !important;
   box-shadow: none !important;
   background: transparent;
   border-bottom: 1px solid #000;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  z-index: -1;
+  color: #56A4FF;
+  font-size: 12px;
+}
+
+.input-wrapper .form-select {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid #000;
+  outline: none;
+  background: transparent;
+}
+
+.input-wrapper .form-select:hover {
+  cursor: pointer;
+}
+
+.input-wrapper .form-select option {
+  background-color: white;
+  color: #1A1918;
+}
+
+.input-wrapper .form-select:focus, .input-wrapper .form-select:active {
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent;
+  border-bottom: 1px solid #000;
+}
+
+.input-wrapper input {
+  padding-inline: 8px;
+}
+
+.date-wrapper {
+  display: flex;
+  gap: 8px;
 }
 
 .submit-button {

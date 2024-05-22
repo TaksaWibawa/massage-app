@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+from django.core.validators import MinValueValidator, MaxValueValidator
+from django.utils import timezone
 import uuid
 
 # Model for audit fields
@@ -93,3 +95,37 @@ class Service(Auditable):
 
     def __str__(self):
         return self.name
+    
+# Model for assignment management
+class Assignment(Auditable):
+    # Default values
+    def default_admin():
+        if User.objects.filter(username__iexact='admin').exists():
+            return User.objects.get(username__iexact='admin').id
+        else:
+            user = User.objects.create(username='admin', password=make_password('admin'))
+            user.save()
+            return user.id
+
+    # Main fields
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    service = models.ForeignKey(Service, on_delete=models.CASCADE)
+    customer = models.CharField(max_length=100, default='Customer')
+    chair = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
+    phone = models.CharField(max_length=20, default='0')
+    start_date = models.DateTimeField(default=timezone.now)
+    end_date = models.DateTimeField(null=True, blank=True)
+
+    # Audit fields
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assignment_created_by', default=default_admin)
+    last_updated_at = models.DateTimeField(auto_now=True)
+    last_updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='assignment_last_updated_by', default=default_admin)
+
+    def save(self, *args, **kwargs):
+        self.end_date = self.start_date + timezone.timedelta(minutes=self.service.duration)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.customer

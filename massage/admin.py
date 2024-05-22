@@ -1,10 +1,8 @@
-from django.contrib import admin
-from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
-
 from django.contrib.auth.models import User
-from .models import Role, Employee, Service
+from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
+from django.contrib import admin
+from .models import Role, Employee, Service, Assignment
 from .forms import UserAdminForm
-
 
 class AuditableAdmin(admin.ModelAdmin):
     list_display = ['created_at', 'created_by',
@@ -59,8 +57,12 @@ class EmployeeAdmin(AuditableAdmin):
 class ServiceAdmin(AuditableAdmin):
     list_display = ['name', 'price', 'duration'] + AuditableAdmin.list_display
 
+class AssignmentAdmin(AuditableAdmin):
+    list_display = ['customer', 'service', 'chair', 'employee', 'start_date', 'end_date'] + AuditableAdmin.list_display
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(Employee, EmployeeAdmin)
 admin.site.register(Service, ServiceAdmin)
+admin.site.register(Assignment, AssignmentAdmin)

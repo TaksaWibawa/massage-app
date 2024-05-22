@@ -1,0 +1,59 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}
+  New Assignment
+{% endblock title %}
+{% block pageTitle %}
+  New Assignment
+{% endblock pageTitle %}
+{% block content %}
+  <section class="section-wrapper justify-content-start mt-5 px-4 w-100">
+    <form method="post" class="form-wrapper" id="assignment-form">
+      {% csrf_token %}
+      {% if form.non_field_errors %}
+        <div class="alert alert-danger text-center">
+          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+      {% endif %}
+      <div class="input-wrapper">
+        <label for="{{ form.service.id_for_label }}">Service</label>
+        <div class="select-wrapper">
+          <i class="fa-solid fa-play select-icon"></i>
+          {{ form.service }}
+          <div class="select-arrow"></div>
+        </div>
+      </div>
+      <div class="input-wrapper">
+        <label for="{{ form.employee.id_for_label }}">Employee</label>
+        <div class="select-wrapper">
+          <i class="fa-solid fa-play select-icon"></i>
+          {{ form.employee }}
+          <div class="select-arrow"></div>
+        </div>
+      </div>
+      <div class="input-wrapper">
+        <label for="{{ form.chair.id_for_label }}">Chair Number</label>
+        <div class="select-wrapper">
+          <i class="fa-solid fa-play select-icon"></i>
+          {{ form.chair }}
+          <div class="select-arrow"></div>
+        </div>
+      </div>
+      <div class="input-wrapper">
+        <label for="{{ form.customer.id_for_label }}">Customer Name</label>
+        {{ form.customer }}
+      </div>
+      <div class="input-wrapper">
+        <label for="{{ form.phone.id_for_label }}">Tlp. Number</label>
+        {{ form.phone }}
+      </div>
+      <div class="input-wrapper">
+        <label for="{{ form.start_date.id_for_label }}">Date</label>
+        <div class="date-wrapper">
+          {{ form.start_date }}
+        </div>
+      </div>
+      <button type="submit" class="btn submit-button">Submit</button>
+    </form>
+  </section>
+{% endblock %}
