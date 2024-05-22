@@ -9,18 +9,27 @@
 {% block content %}
   <section class="section-wrapper justify-content-start mt-5 px-3">
     <ul class="list-wrapper">
-      {% for employee in employees %}
-        <li class="info-card">
-          <div class="info-card-image">
-            <img src="{{ employee.image.url }}" alt="{{ employee.name }}">
-          </div>
-          <div class="info-card-content">
-            <h2>{{ employee.name }}</h2>
-            <p>{{ employee.phone }}</p>
-            <p>{{ employee.address }}</p>
-          </div>
-        </li>
-      {% endfor %}
+      {% if employees %}
+        {% for employee in employees %}
+          <li class="info-card">
+            <div class="info-card-image">
+              {% if employee.image %}
+                <img src="{{ employee.image.url }}" alt="{{ employee.name }}">
+              {% else %}
+                <img src="{% static 'massage/images/profile-placeholder.svg' %}"
+                     alt="Default Profile Image">
+              {% endif %}
+            </div>
+            <div class="info-card-content">
+              <h2>{{ employee.name }}</h2>
+              <p>{{ employee.phone }}</p>
+              <p>{{ employee.address }}</p>
+            </div>
+          </li>
+        {% endfor %}
+      {% else %}
+        <p>No employees are available.</p>
+      {% endif %}
     </ul>
   </section>
 {% endblock %}

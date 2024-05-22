@@ -10,18 +10,27 @@
 {% block content %}
   <section class="section-wrapper justify-content-start mt-5 px-3">
     <ul class="list-wrapper">
-      {% for service in services %}
-        <li class="info-card">
-          <div class="info-card-service">
-            <img src="{{ service.image.url }}" alt="{{ service.name }}">
-          </div>
-          <div class="info-card-content">
-            <h2>{{ service.name }}</h2>
-            <p>{{ service.price|currency }}</p>
-            <p>{{ service.duration }} mins.</p>
-          </div>
-        </li>
-      {% endfor %}
+      {% if services %}
+        {% for service in services %}
+          <li class="info-card">
+            <div class="info-card-service">
+              {% if service.image %}
+                <img src="{{ service.image.url }}" alt="{{ service.name }}">
+              {% else %}
+                <img src="{% static 'massage/images/woman-relaxing-spa 1.png' %}"
+                     alt="Default Service Image">
+              {% endif %}
+            </div>
+            <div class="info-card-content">
+              <h2>{{ service.name }}</h2>
+              <p>{{ service.price|currency }}</p>
+              <p>{{ service.duration }} mins.</p>
+            </div>
+          </li>
+        {% endfor %}
+      {% else %}
+        <p>No services are available.</p>
+      {% endif %}
     </ul>
   </section>
 {% endblock %}

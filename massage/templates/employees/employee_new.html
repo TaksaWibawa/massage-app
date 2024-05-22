@@ -25,39 +25,31 @@
           <img src="{% static 'massage/images/image-upload.svg' %}"
                alt="Profile Image">
         </label>
-        <input type="file" name="image" id="image-upload" accept="image/*" required>
+        {{ form.image }}
       </div>
       <div class="input-wrapper">
         <label for="name">Name</label>
-        <input type="text" name="name" id="name" class="form-control" required>
+        {{ form.name }}
       </div>
       <div class="input-wrapper">
         <label for="phone">Tlp. Number</label>
-        <input type="text" name="phone" id="phone" class="form-control" required>
+        {{ form.phone }}
       </div>
       <div class="input-wrapper">
         <label for="address">Address</label>
-        <input type="text" name="address" id="address" class="form-control" required>
+        {{ form.address }}
       </div>
       <div class="input-wrapper">
         <label for="age">Age</label>
-        <input type="number" name="age" id="age" class="form-control" required>
+        {{ form.age }}
       </div>
       <div class="input-wrapper">
         <label for="username">Username</label>
-        <input type="text"
-               name="username"
-               id="username"
-               class="form-control"
-               required>
+        {{ form.username }}
       </div>
       <div class="input-wrapper">
         <label for="password">Password</label>
-        <input type="password"
-               name="password"
-               id="password"
-               class="form-control"
-               required>
+        {{ form.password }}
       </div>
       <button type="submit" class="btn submit-button">Submit</button>
     </form>
