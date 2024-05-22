@@ -25,7 +25,9 @@ def supervisor_required(allowed_roles=[]):
         def _wrapped_view(request, *args, **kwargs):
             if not request.user.is_authenticated:
                 return redirect('login')
-            elif request.user.employee and request.user.employee.role.name in allowed_roles:
+            elif request.user.is_superuser:
+                return view_func(request, *args, **kwargs)
+            elif hasattr(request.user, 'employee') and hasattr(request.user.employee, 'role') and request.user.employee.role.name in allowed_roles:
                 return view_func(request, *args, **kwargs)
             else:
                 return redirect('/')
