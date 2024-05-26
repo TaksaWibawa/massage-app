@@ -25,6 +25,11 @@
               <h2>{{ service.name }}</h2>
               <p>{{ service.price|currency }}</p>
               <p>{{ service.duration }} mins.</p>
+              <div class="info-card-actions">
+                <a href="{% url 'service_edit' service.id %}" class="btn edit-button">Edit</a>
+                <a href="{% url 'service_delete' service.id %}"
+                   class="btn delete-button">Delete</a>
+              </div>
             </div>
           </li>
         {% endfor %}
