@@ -16,13 +16,13 @@ urlpatterns = [
 
   # Employee
   path('employee-list', views.EmployeeListPage, name='employee_list'),
-  path('new-employee', views.EmployeeNewPage, name='employee_new'),
-  path('edit-employee/<str:id>', views.EmployeeEditPage, name='employee_edit'),
-  path('delete-employee/<str:id>', views.EmployeeDeletePage, name='employee_delete'),
+  path('employee/create', views.EmployeeNewPage, name='employee_new'),
+  path('employee/edit/<str:id>', views.EmployeeEditPage, name='employee_edit'),
+  path('employee/delete/<str:id>', views.EmployeeDeletePage, name='employee_delete'),
 
   # Service
   path('service-list', views.ServiceListPage, name='service_list'),
-  path('new-service', views.ServiceNewPage, name='service_new'),
-  path('edit-service/<str:id>', views.ServiceEditPage, name='service_edit'),
-  path('delete-service/<str:id>', views.ServiceDeletePage, name='service_delete'),
+  path('service/create', views.ServiceNewPage, name='service_new'),
+  path('service/edit/<str:id>', views.ServiceEditPage, name='service_edit'),
+  path('service/delete/<str:id>', views.ServiceDeletePage, name='service_delete'),
 ]
