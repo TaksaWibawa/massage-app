@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django.utils import timezone
+from colorfield.fields import ColorField
 import uuid
 
 # Model for audit fields
@@ -59,6 +60,7 @@ class Employee(Auditable):
     age = models.IntegerField(default=0)
     user = models.OneToOneField(User, on_delete=models.CASCADE, default=default_user)
     role = models.ForeignKey(Role, on_delete=models.CASCADE, default=default_role)
+    color = ColorField(default='#48D75F')  
 
     # Audit fields
     created_at = models.DateTimeField(auto_now_add=True)
@@ -106,6 +108,9 @@ class Assignment(Auditable):
             user = User.objects.create(username='admin', password=make_password('admin'))
             user.save()
             return user.id
+    def default_start_date():
+        now = timezone.now()
+        return now.replace(hour=18, minute=0, second=0, microsecond=0)
 
     # Main fields
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -114,7 +119,7 @@ class Assignment(Auditable):
     customer = models.CharField(max_length=100, default='Customer')
     chair = models.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(4)])
     phone = models.CharField(max_length=20, default='0')
-    start_date = models.DateTimeField(default=timezone.now)
+    start_date = models.DateTimeField(default=default_start_date)
     end_date = models.DateTimeField(null=True, blank=True)
 
     # Audit fields

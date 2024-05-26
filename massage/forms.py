@@ -2,10 +2,10 @@ from django.utils import timezone
 from django.db.models import Q
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import User
-from django.contrib.auth.hashers import make_password
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 from django import forms
+from datetime import time
 from .models import Role, Employee, Service, Assignment
 
 
@@ -32,6 +32,7 @@ class LoginForm(AuthenticationForm):
 
 
 class EmployeeForm(forms.ModelForm):
+    color = forms.CharField(required=True, widget=forms.TextInput(attrs={'id': 'color', 'type': 'color', 'value': '#48D75F'}))
     name = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'name'}))
     phone = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'phone'}))
     address = forms.CharField(required=True, widget=forms.TextInput(attrs={'class': 'form-control', 'id': 'address'}))
@@ -43,7 +44,7 @@ class EmployeeForm(forms.ModelForm):
     class Meta:
         model = Employee
         fields = ["image", "name", "phone",
-                  "address", "age", "username", "password"]
+                  "address", "age", "username", "password", "color"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -99,6 +100,29 @@ class ServiceForm(forms.ModelForm):
 
 
 class AssignmentForm(forms.ModelForm):
+    def default_start_date():
+        now = timezone.localtime(timezone.now())
+        return now.replace(hour=18, minute=0, second=0, microsecond=0)
+
+    def validate_time_range(value):
+        start_time = time(18, 0)
+        end_time = time(22, 0)
+
+        if not (start_time <= value.time() <= end_time):
+            raise ValidationError("Time must be between 18:00 and 22:00.")
+        
+    def calculate_end_time(self):
+        start_date = self.cleaned_data.get('start_date')
+        service = self.cleaned_data.get('service')
+    
+        if start_date and service:
+            end_date = start_date + timezone.timedelta(minutes=service.duration)
+
+            if end_date.time() > time(22, 0):
+                raise forms.ValidationError('The selected service exceeds the working hours (18:00 - 22:00).')
+
+            return end_date
+
     service = forms.ModelChoiceField(queryset=Service.objects.all(), empty_label='', initial=None, required=True,
                                      widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'service'}))
     employee = forms.ModelChoiceField(queryset=Employee.objects.all(), empty_label='', initial=None, required=True,
@@ -115,13 +139,14 @@ class AssignmentForm(forms.ModelForm):
         attrs={'class': 'form-control', 'id': 'phone'}))
     start_date = forms.SplitDateTimeField(
         required=True,
-        initial=timezone.now,
+        initial=default_start_date,
+        validators=[validate_time_range],
         widget=forms.SplitDateTimeWidget(
             date_format='%Y-%m-%d',
             time_format='%H:%M',
             date_attrs={'type': 'date', 'class': 'form-control'},
-            time_attrs={'type': 'time', 'class': 'form-control'}
-        )
+            time_attrs={'type': 'time', 'class': 'form-control'},
+        ),
     )
 
     class Meta:
@@ -137,31 +162,30 @@ class AssignmentForm(forms.ModelForm):
         employee = cleaned_data.get('employee')
 
         if start_date and service:
-            end_date = start_date + timezone.timedelta(minutes=service.duration)
+            end_date = self.calculate_end_time()
 
             # Check if the employee is occupied
-            overlapping_assignments_employee = Assignment.objects.filter(
-                Q(start_date__range=(start_date, end_date)) |
-                Q(start_date__lte=start_date, end_date__gt=start_date) |
-                Q(start_date__lt=end_date, end_date__gte=end_date),
-                employee=employee
+            overlapping_assignments = Assignment.objects.filter(
+                employee=employee,
+                start_date__lt=end_date,
+                end_date__gt=start_date
             )
 
-            # Check if the chair is occupied by a different employee
+            if self.instance.pk:
+                overlapping_assignments = overlapping_assignments.exclude(pk=self.instance.pk)
+
+            if overlapping_assignments.exists():
+                raise forms.ValidationError('The selected employee is already occupied in the selected date and time range.')
+            
+            # Check if the chair is occupied
             overlapping_assignments_chair = Assignment.objects.filter(
-                Q(start_date__range=(start_date, end_date)) |
-                Q(start_date__lte=start_date, end_date__gt=start_date) |
-                Q(start_date__lt=end_date, end_date__gte=end_date),
-                chair=chair
+                chair=chair,
+                start_date__lt=end_date,
+                end_date__gt=start_date
             ).exclude(employee=employee)
 
-            if overlapping_assignments_employee.exists():
-                raise ValidationError(
-                    "The selected employee is already occupied in the selected date and time range.")
-
             if overlapping_assignments_chair.exists():
-                raise ValidationError(
-                    "The selected chair is already occupied by a different employee in the selected date and time range.")
+                raise forms.ValidationError('The selected chair is already occupied in the selected date and time range.')  
 
         return cleaned_data
 

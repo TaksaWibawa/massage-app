@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'bootstrap5',
     'fontawesomefree',
+    'colorfield',
 
     # Default
     'django.contrib.admin',
@@ -78,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.messages.context_processors.messages',
 
                 'massage.context_processors.nav_menus',
+                'massage.context_processors.chart_context',
             ],
         },
     },

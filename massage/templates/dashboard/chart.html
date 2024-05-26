@@ -1,0 +1,122 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block title %}
+  Chart
+{% endblock title %}
+{% block pageTitle %}
+  Chart
+{% endblock pageTitle %}
+{% block content %}
+  <section class="chart-wrapper mt-5">
+    {% for chairs in CHAIRS_GROUPED %}
+      <div class="content-group">
+        <div class="chairs">
+          <div class="empty-cell"></div>
+          {% for chair in chairs %}<h3 class="indicator">{{ chair }}</h3>{% endfor %}
+        </div>
+        <div class="time-slots">
+          {% for time_slot, row in TIME_SLOTS %}
+            <div class="time-slot" style="grid-row-start: {{ row }};">
+              <h3 class="indicator">{{ time_slot }}</h3>
+            </div>
+          {% endfor %}
+        </div>
+        {% for chair in chairs %}
+          <div class="tasks">
+            {% for task_with_position in tasks_with_positions %}
+              {% if task_with_position.task.chair == chair %}
+                <div class="task"
+                     style="grid-row-start: {{ task_with_position.start_row }};
+                            grid-row-end: {{ task_with_position.end_row }};
+                            background-color: {{ task_with_position.task.employee.color }}"
+                     data-bs-toggle="modal"
+                     data-bs-target="#taskModal"
+                     data-task-id="{{ task_with_position.task.id }}"
+                     data-task-chair="{{ task_with_position.task.chair }}"
+                     data-task-customer="{{ task_with_position.task.customer }}"
+                     data-task-employee="{{ task_with_position.task.employee.name }}"
+                     data-task-service="{{ task_with_position.task.service }}"
+                     data-task-time="{{ task_with_position.start_time }} - {{ task_with_position.end_time }}">
+                  <div class="task-item">
+                    <div class="task-item__time">{{ task_with_position.start_time }} - {{ task_with_position.end_time }}</div>
+                    <div class="task-item__employee">{{ task_with_position.task.employee.name }}</div>
+                    <div class="task-item__service">{{ task_with_position.task.service }}</div>
+                  </div>
+                </div>
+              {% endif %}
+            {% endfor %}
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </section>
+  <div class="modal fade"
+       id="taskModal"
+       tabindex="-1"
+       aria-labelledby="taskModalLabel"
+       aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="taskModalLabel">Task Details</h5>
+          <button type="button"
+                  class="btn-close"
+                  data-bs-dismiss="modal"
+                  aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="modal-item">
+            <div class="modal-item__time" id="task-time"></div>
+            <div class="modal-item__chair" id="task-chair"></div>
+            <div class="modal-item__customer" id="task-customer"></div>
+            <div class="modal-item__employee" id="task-employee"></div>
+            <div class="modal-item__service" id="task-service"></div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <a type="button"
+             class="btn edit-button"
+             href="{% url 'edit_assignment' 9999 %}">Edit</a>
+          <a type="button"
+             class="btn delete-button"
+             href="{% url 'delete_assignment' 9999 %}">Delete</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script>
+      let editUrlTemplate = "{% url 'edit_assignment' 9999 %}";
+      let deleteUrlTemplate = "{% url 'delete_assignment' 9999 %}";
+
+      function getTaskData(task) {
+          return {
+              id: task.getAttribute('data-task-id'),
+              chair: task.getAttribute('data-task-chair'),
+              customer: task.getAttribute('data-task-customer'),
+              employee: task.getAttribute('data-task-employee'),
+              service: task.getAttribute('data-task-service'),
+              time: task.getAttribute('data-task-time'),
+          };
+      }
+
+      const taskModal = document.getElementById('taskModal');
+      taskModal.addEventListener('show.bs.modal', function(event) {
+          const button = event.relatedTarget;
+          const taskId = button.getAttribute('data-task-id');
+          const modal = this;
+          const task = document.querySelector(`.task[data-task-id="${taskId}"]`);
+          const taskData = getTaskData(task);
+
+          this.dataset.taskId = taskId;
+
+          document.querySelector('.edit-button').href = editUrlTemplate.replace('9999', taskId);
+          document.querySelector('.delete-button').href = deleteUrlTemplate.replace('9999', taskId);
+
+          document.getElementById('task-time').textContent = `Time: ${taskData.time}`;
+          document.getElementById('task-chair').textContent = `Chair Number: ${taskData.chair}`;
+          document.getElementById('task-customer').textContent = `Customer Name: ${taskData.customer}`;
+          document.getElementById('task-employee').textContent = `Employee in Charge: ${taskData.employee}`;
+          document.getElementById('task-service').textContent = `Service: ${taskData.service}`;
+      });
+  </script>
+{% endblock content %}

@@ -63,10 +63,11 @@
                     <i class="fa-solid fa-play"></i>
                     <span class="menu-heading">{{ key }}</span>
                   </div>
-                  <ul class="submenu-list" style="display: none">
+                  <ul class="submenu-list">
                     {% for item in value %}
                       <li>
-                        <a href="{% url item.url %}" class="submenu-item">{{ item.name }}</a>
+                        <a href="{% url item.url %}"
+                           class="submenu-item{% if item.url == request.path %} active{% endif %}">{{ item.name }}</a>
                       </li>
                     {% endfor %}
                   </ul>
