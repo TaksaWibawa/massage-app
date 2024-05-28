@@ -1,0 +1,112 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load price_filters %}
+{% block title %}
+  Receipt
+{% endblock title %}
+{% block pageTitle %}
+  Receipt
+{% endblock pageTitle %}
+{% block content %}
+  <section class="section-wrapper justify-content-start mt-5 px-4 w-100 gap-1">
+    <div class="receipt-header">
+      <h3>Massage</h3>
+      <p>Jl. Raya Puputan No.1, Renon</p>
+      <p>0857-3829-1234</p>
+    </div>
+    <form method="post" class="receipt-body">
+      {% csrf_token %}
+      <hr class="receipt-line">
+      <div class="receipt-info">
+        <div class="receipt-info-left">
+          <p>Invoice : {{ invoice_number }}</p>
+          <p>Date : {% now "d/m/Y" %}</p>
+          <p>Time : {% now "H:i" %}</p>
+        </div>
+        <div class="receipt-info-right">
+          <p>Therapist : {{ assignment.employee.name }}</p>
+          <p>Cust : {{ assignment.customer }}</p>
+          <p>Cashier : Admin</p>
+        </div>
+      </div>
+      <hr class="receipt-line">
+      <div class="receipt-services">
+        <p>{{ assignment.service.name }}</p>
+        <p>{{ assignment.service.price|currency_format_dot }}</p>
+      </div>
+      <hr class="receipt-line">
+      <div class="receipt-additional">
+        <span class="receipt-additional__label">+Additional Treatment</span>
+        {% for form in formset %}
+            <div class="receipt-additional__service">
+                {{ form.as_p }}
+            </div>
+        {% endfor %}
+      </div>
+      <div class="receipt-total">
+        <div class="receipt-total__labels">
+          <span class="receipt-total__label">Sub Total :</span>
+          <span class="receipt-total__label">Discount :</span>
+          <span class="receipt-total__label">Total :</span>
+          <span class="receipt-total__label">Payment Method :</span>
+        </div>
+        <div class="receipt-total__values">
+          <span class="receipt-total__value">{{ assignment.service.price|currency_format_dot }}</span>
+          <span class="receipt-total__value">-0</span>
+          <span class="receipt-total__value">{{ assignment.service.price|currency_format_dot }}</span>
+          <span class="receipt-total__value">Cash</span>
+        </div>
+      </div>
+      <div class="receipt-actions">
+        <input type="hidden" name="receipt_id" value="{{ invoice_number }}">
+        <button type="submit" class="btn submit-button">Print</button>
+      </div>
+      {{ formset.management_form }}
+    </form>
+  </section>
+
+  <script>
+    let count = {{ formset.total_form_count }};
+    const maxFields = {{ formset.max_num }};
+    let total = {{ assignment.service.price }};
+    let subTotalElement = document.querySelector('.receipt-total__values .receipt-total__value:nth-child(1)');
+    let totalElement = document.querySelector('.receipt-total__values .receipt-total__value:nth-child(3)');
+    let servicesPrices = JSON.parse('{{ services_prices|escapejs }}');
+    let additionalLabel = document.querySelector('.receipt-additional__label');
+    let lastSelectedServices = {};
+  
+    additionalLabel.addEventListener('click', function() {
+        if (count < maxFields) {
+            const servicesContainer = document.querySelector('.receipt-additional');
+            const newService = document.createElement('div');
+            newService.classList.add('receipt-additional__service');
+            newService.innerHTML = `
+              <div class="input-wrapper">
+                <div class="select-wrapper">
+                  <i class="fa-solid fa-play select-icon"></i>
+                  {{ formset.empty_form.additional_service }}
+                  <div class="select-arrow"></div>
+                </div>
+              </div>
+            `.replace(/__prefix__/g, count);
+            servicesContainer.appendChild(newService);
+            count++;
+            document.querySelector('#id_additional_services-TOTAL_FORMS').value = count;
+  
+            let selectField = newService.querySelector('select[name^="additional_services-"][name$="-additional_service"]');
+            selectField.addEventListener('change', function(e) {
+              let serviceId = e.target.value;
+              if (lastSelectedServices[selectField.name]) {
+                total -= servicesPrices[lastSelectedServices[selectField.name]];
+              }
+              if (serviceId) {
+                total += servicesPrices[serviceId];
+              }
+              lastSelectedServices[selectField.name] = serviceId;
+              subTotalElement.textContent = total;
+              totalElement.textContent = total;
+          });
+        }
+    });
+  </script>
+{% endblock content %}

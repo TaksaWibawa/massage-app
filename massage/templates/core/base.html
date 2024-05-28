@@ -66,8 +66,7 @@
                   <ul class="submenu-list">
                     {% for item in value %}
                       <li>
-                        <a href="{% url item.url %}"
-                           class="submenu-item{% if item.url == request.path %} active{% endif %}">{{ item.name }}</a>
+                        <a href="{% url item.url %}" class="submenu-item">{{ item.name }}</a>
                       </li>
                     {% endfor %}
                   </ul>

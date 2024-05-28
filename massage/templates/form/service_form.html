@@ -13,17 +13,24 @@
           class="form-wrapper"
           id="service-form">
       {% csrf_token %}
-      {% if form.errors %}
+      {% for field in form %}
+        {% for error in field.errors %}
+          <div class="alert alert-danger text-center">
+            <p>{{ error }}</p>
+          </div>
+        {% endfor %}
+      {% endfor %}
+      {% if form.non_field_errors %}
         <div class="alert alert-danger text-center">
-          {% for field in form %}
-            {% for error in field.errors %}<p>{{ error }}</p>{% endfor %}
-          {% endfor %}
+          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
         </div>
       {% endif %}
       <div class="file-uploader">
         <label for="{{ form.image.id_for_label }}">
           {% if form.image.value %}
-            <img src="{{ form.instance.image.url }}" alt="Profile Image" class="object-fit-contain" />
+            <img src="{{ form.instance.image.url }}"
+                 alt="Profile Image"
+                 class="object-fit-contain" />
           {% else %}
             <img src="{% static 'massage/images/service-upload.svg' %}"
                  alt="Service Image" />

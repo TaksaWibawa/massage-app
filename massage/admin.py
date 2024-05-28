@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 from django.contrib import admin
-from .models import Role, Employee, Service, Assignment
+from .models import Role, Employee, Service, Assignment, Receipt, ReceiptService, GlobalSettings
 from .forms import UserAdminForm
 
 class AuditableAdmin(admin.ModelAdmin):
@@ -47,6 +47,16 @@ class UserAdmin(DefaultUserAdmin):
         obj.save()
         Employee.objects.get_or_create(user=obj, defaults={'role': role})
 
+class GlobalSettingsAdmin(admin.ModelAdmin):
+    list_display = ('name', 'type', 'display_value')
+
+    def display_value(self, obj):
+        if obj.type == 'percentage':
+            return f'{obj.value}%'
+        return obj.value
+
+    display_value.short_description = 'Value'
+
 class RoleAdmin(admin.ModelAdmin):
     list_display = ['id', 'name']
 
@@ -60,9 +70,19 @@ class ServiceAdmin(AuditableAdmin):
 class AssignmentAdmin(AuditableAdmin):
     list_display = ['customer', 'service', 'chair', 'employee', 'start_date', 'end_date'] + AuditableAdmin.list_display
 
+class ReceiptServiceInline(admin.TabularInline):
+    model = ReceiptService
+    extra = 1
+
+class ReceiptAdmin(AuditableAdmin):
+    inlines = [ReceiptServiceInline]
+    list_display = ['id', 'assignment', 'total'] + AuditableAdmin.list_display
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
+admin.site.register(GlobalSettings, GlobalSettingsAdmin)
 admin.site.register(Role, RoleAdmin)
 admin.site.register(Employee, EmployeeAdmin)
 admin.site.register(Service, ServiceAdmin)
 admin.site.register(Assignment, AssignmentAdmin)
+admin.site.register(Receipt, ReceiptAdmin)

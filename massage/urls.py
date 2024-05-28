@@ -13,6 +13,7 @@ urlpatterns = [
   path('assignment/create' , views.NewAssignmentPage, name='new_assignment'),
   path('assignment/edit/<str:id>', views.EditAssignmentPage, name='edit_assignment'),
   path('assignment/delete/<str:id>', views.DeleteAssignmentPage, name='delete_assignment'),
+  path('assignment/pay/<str:id>', views.ReceiptPage, name='receipt'),
 
   # Employee
   path('employee-list', views.EmployeeListPage, name='employee_list'),

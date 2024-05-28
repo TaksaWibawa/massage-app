@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Nova+Slim&family=Montserrat:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nova+Slim&family=Montserrat:wght@400;500;600;700&display=swap');
 
 * {
   margin: 0;
@@ -338,7 +338,7 @@ p {
   align-items: center;
 }
 
-.submit-button {
+.edit-button, .general-button, .delete-button, .pay-button, .submit-button {
   background-color: #4bd4ff;
   color: #1a1918;
   padding-block: 8px;
@@ -348,27 +348,19 @@ p {
   border-radius: 24px;
 }
 
-.edit-button, .general-button {
-  background-color: #5291ac;
-  color: white;
-  padding-block: 8px;
+.edit-button, .general-button, .delete-button {
   padding-inline: 24px;
-  text-align: center;
-  width: fit-content;
-  border-radius: 24px;
 }
 
 .delete-button {
   background-color: #ff4b4b;
-  color: white;
-  padding-block: 8px;
-  padding-inline: 24px;
-  text-align: center;
-  width: fit-content;
-  border-radius: 24px;
 }
 
-.edit-button:hover, .delete-button:hover {
+.pay-button {
+  background-color: #4bff4b;
+}
+
+.btn:hover {
   cursor: pointer;
   outline: none !important;
   box-shadow: none !important;
@@ -452,4 +444,102 @@ p {
   font-size: 16px;
   color: white;
   background-color: #5291ac;
+}
+
+.receipt-header {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  font-size: 18px;
+}
+
+.receipt-header h3 {
+  font-weight: 700;
+  font-size: 24px;
+}
+
+.receipt-header p {
+  font-size: 20px;
+}
+
+.receipt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.receipt-line {
+  border: none;
+  border-top: 2px solid black;
+  color: black;
+  background-color: black;
+  opacity: 1;
+}
+
+.receipt-info, .receipt-services, .receipt-total {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.receipt-info-left, .receipt-info-right, .receipt-total, .receipt-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.receipt-info-left p, .receipt-info-right p, .receipt-services p, .receipt-total__label, .receipt-total__value, .receipt-additional__label {
+  font-size: 14px;
+}
+
+.receipt-info-right p, .receipt-total p {
+  text-align: right;
+}
+
+.receipt-total{
+  display: grid;
+  grid-template-columns: 1.5fr 0.75fr;
+  margin-top: 12px;
+  margin-bottom: 64px;
+}
+
+.receipt-total__labels, .receipt-total__values {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: right;
+}
+
+.receipt-total__label, .receipt-total__value {
+  font-weight: 700;
+}
+
+.receipt-additional__service {
+  border: none;
+  border-radius: 0;
+  border-bottom: 1px solid #000;
+  outline: none;
+  background: transparent;
+}
+
+.receipt-actions {
+  justify-content: center;
+  align-items: center;
+}
+
+.receipt-additional__label {
+  color: #2AA3BE;
+}
+
+.receipt-additional__label:hover {
+  cursor: pointer;
+  text-decoration: underline;
+  color: #1f7f94;
+}
+
+.receipt-additional__service {
+  margin-block: 8px;
 }

@@ -74,6 +74,7 @@
           </div>
         </div>
         <div class="modal-footer">
+          <a type="button" class="btn pay-button" href="{% url 'receipt' 9999 %}">Payment</a>
           <a type="button"
              class="btn edit-button"
              href="{% url 'edit_assignment' 9999 %}">Edit</a>
@@ -85,6 +86,7 @@
     </div>
   </div>
   <script>
+      let payUrlTemplate = "{% url 'receipt' 9999 %}";
       let editUrlTemplate = "{% url 'edit_assignment' 9999 %}";
       let deleteUrlTemplate = "{% url 'delete_assignment' 9999 %}";
 
@@ -109,6 +111,7 @@
 
           this.dataset.taskId = taskId;
 
+          document.querySelector('.pay-button').href = payUrlTemplate.replace('9999', taskId);
           document.querySelector('.edit-button').href = editUrlTemplate.replace('9999', taskId);
           document.querySelector('.delete-button').href = deleteUrlTemplate.replace('9999', taskId);
 
