@@ -113,7 +113,9 @@ class EmployeeForm(forms.ModelForm):
 
         return cleaned_data
 
-    def save(self, commit=True):
+    def save(self, commit=True, user=None):
+        if user is not None:
+            self.user = user
         return super(EmployeeForm, self).save(commit=commit)
 
 
@@ -180,7 +182,10 @@ class AssignmentForm(forms.ModelForm):
             return end_date
         
     def get_chair_choices():
-        max_chairs = get_global_setting('max chairs')
+        try:
+            max_chairs = get_global_setting('max chairs')
+        except Exception:
+            max_chairs = 8
         return [(None, '')] + [(i, i) for i in range(1, max_chairs + 1)]
     
     service = forms.ModelChoiceField(queryset=Service.objects.filter(is_active=True), empty_label='', initial=None, required=True,
