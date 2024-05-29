@@ -1,8 +1,11 @@
 from datetime import datetime
+from decimal import Decimal
 import json
 
 from django.contrib import messages
 from django.contrib.auth import login
+from django.db.models import Sum, F
+from django.db.models.functions import TruncDay
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
@@ -10,7 +13,7 @@ from .context_processors import chart_context
 from .decorator import auth_required, protected, supervisor_required
 from .forms import (AdditionalServicesFormset, AssignmentForm, EmployeeForm,
                     LoginForm, ServiceForm, CreateUserForm, ChangePasswordForm)
-from .models import (Assignment, Employee, Receipt, ReceiptService, Service)
+from .models import (Assignment, Employee, Receipt, ReceiptService, Service, EmployeePayment)
 from .utils import get_global_setting
 
 # Auth
@@ -93,6 +96,20 @@ def DeleteAssignmentPage(request, id):
 
     return render(request, 'dashboard/assignment_delete.html', {'assignment': assignment})
 
+@supervisor_required(allowed_roles=['supervisor'])
+def NewAssignmentPage(request):
+    if request.method == 'POST':
+        form = AssignmentForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Assignment has been created successfully.')
+            return redirect('chart')
+        else:
+            messages.error(request, 'Failed to create assignment.')
+    else:
+        form = AssignmentForm()
+    return render(request, 'dashboard/assignment_new.html', {'form': form})
+
 
 @supervisor_required(allowed_roles=['supervisor'])
 def ReceiptPage(request, id):
@@ -133,8 +150,9 @@ def ReceiptPage(request, id):
 
             receipt = Receipt.objects.create(
                 id=invoice_number,
+                cashier=request.user,
                 assignment=assignment,
-                total=total_price,
+                total=total_price
             )
 
             assignment.is_done = True
@@ -144,6 +162,14 @@ def ReceiptPage(request, id):
                 receipt=receipt, service=assignment.service)
             for service in additional_services:
                 ReceiptService.objects.create(receipt=receipt, service=service)
+
+            # will be changed later
+            EmployeePayment.objects.create(
+                receipt=receipt,
+                fee_percentage=ppn,
+                total=total_price * (1 + ppn / 100),
+                is_paid=False
+            )
 
             messages.success(request, 'Receipt has been created successfully.')
             return redirect('chart')
@@ -163,22 +189,42 @@ def ReceiptPage(request, id):
 
 @auth_required
 def RecapPage(request):
-    return render(request, 'dashboard/recap.html')
+    employee_payments = EmployeePayment.objects.all()
 
+    if 'date' in request.GET:
+        date = request.GET['date']
+        employee_payments = employee_payments.filter(assignment__start_date__date=date)
+
+    if 'employee_id' in request.GET:
+        employee_id = request.GET['employee_id']
+        employee_payments = employee_payments.filter(assignment__employee__id=employee_id)
+
+    if 'pay_all' in request.POST:
+        employee_payments.update(is_paid=True)
+
+    total_payment = employee_payments.aggregate(total=Sum('total'))['total'] or 0
+
+    return render(request, 'dashboard/recap.html', {'employee_payments': employee_payments, 'total_payment': total_payment})
 
 @supervisor_required(allowed_roles=['supervisor'])
-def NewAssignmentPage(request):
-    if request.method == 'POST':
-        form = AssignmentForm(request.POST)
-        if form.is_valid():
-            form.save()
-            messages.success(request, 'Assignment has been created successfully.')
-            return redirect('chart')
-        else:
-            messages.error(request, 'Failed to create assignment.')
-    else:
-        form = AssignmentForm()
-    return render(request, 'dashboard/assignment_new.html', {'form': form})
+def ReportPage(request):
+    # Aggregate total revenue per day
+    revenue_per_day = Receipt.objects.annotate(date=TruncDay('created_at')).values('date').annotate(revenue=Sum('total')).order_by('date')
+
+    # Aggregate total cost per day
+    cost_per_day = Assignment.objects.filter(is_done=True).annotate(date=TruncDay('start_date')).values('date').annotate(cost=Sum(F('service__price') * Decimal('0.4'))).order_by('date')
+
+    # Combine revenue and cost data
+    report = []
+    for revenue, cost in zip(revenue_per_day, cost_per_day):
+        report.append({
+            'date': revenue['date'],
+            'revenue': revenue['revenue'],
+            'cost': cost['cost'],
+            'nett_revenue': revenue['revenue'] - cost['cost'],
+        })
+    
+    return render(request, 'dashboard/report.html', {'report': report})
 
 # Employees
 @supervisor_required(allowed_roles=['supervisor'])
@@ -194,7 +240,9 @@ def EmployeeNewPage(request):
         employee_form = EmployeeForm(request.POST, request.FILES)
         if user_form.is_valid() and employee_form.is_valid():
             user = user_form.save()
-            employee_form.save(user=user)
+            employee = employee_form.save(commit=False)
+            employee.user = user
+            employee.save()
             messages.success(request, 'Employee has been created successfully.')
             return redirect('employee_list')
         else:

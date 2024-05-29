@@ -107,15 +107,18 @@ class EmployeeForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         image = cleaned_data.get('image')
+        user = cleaned_data.get('user')
+    
 
         if image is None:
             self.add_error('image', 'Please upload an image')
 
+        if user and Employee.objects.filter(user=user).exists():
+            raise forms.ValidationError("A user with this ID already exists.")
+
         return cleaned_data
 
     def save(self, commit=True, user=None):
-        if user is not None:
-            self.user = user
         return super(EmployeeForm, self).save(commit=commit)
 
 
@@ -181,10 +184,14 @@ class AssignmentForm(forms.ModelForm):
 
             return end_date
         
-    def get_chair_choices():
+    def get_chair_choices(self):
         try:
             max_chairs = get_global_setting('max chairs')
-        except Exception:
+            if max_chairs is None:
+                max_chairs = 8
+            else:
+                max_chairs = int(max_chairs)
+        except Exception as e:
             max_chairs = 8
         return [(None, '')] + [(i, i) for i in range(1, max_chairs + 1)]
     
@@ -193,7 +200,6 @@ class AssignmentForm(forms.ModelForm):
     employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True), empty_label='', initial=None, required=True,
                                       widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
     chair = forms.ChoiceField(
-        choices=get_chair_choices(),
         required=True,
         widget=forms.Select(
             attrs={'class': 'form-control form-select', 'id': 'chair'})
@@ -218,6 +224,10 @@ class AssignmentForm(forms.ModelForm):
         model = Assignment
         fields = ['service', 'employee', 'chair',
                   'customer', 'phone', 'start_date']
+        
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['chair'].choices = self.get_chair_choices()
 
     def clean(self):
         cleaned_data = super().clean()

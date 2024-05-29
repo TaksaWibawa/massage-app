@@ -7,6 +7,16 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from colorfield.fields import ColorField
 
+def default_user():
+    if User.objects.filter(username='admin').exists():
+        return User.objects.get(username='admin')
+    return User.objects.create(username='admin', password=make_password('admin'))
+
+def default_role():
+    if Role.objects.filter(name='employee').exists():
+        return Role.objects.get(name='employee')
+    return Role.objects.create(name='employee')
+
 class Auditable(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, editable=False)
     created_by = models.ForeignKey(User, related_name='created_%(class)s_set', null=True, blank=True, on_delete=models.SET_NULL, editable=False)
@@ -35,7 +45,7 @@ class GlobalSettings(models.Model):
         ('text', 'Text'),
     ]
 
-    name = models.CharField(max_length=255, unique=True, primary_key=True, default='Max Chairs')
+    name = models.CharField(max_length=255, unique=True, primary_key=True, default='Max Chairs', editable=False)
     type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='number')
     value = models.TextField(default='8')
 
@@ -61,22 +71,6 @@ class Role(models.Model):
         return self.name
 
 class Employee(Auditable):
-    def default_user():
-        if User.objects.filter(username__iexact='employee').exists():
-            return User.objects.get(username__iexact='employee').id
-        else:
-            user = User.objects.create(username='employee', password=make_password('employee'))
-            user.save()
-            return user.id
-
-    def default_role():
-        if Role.objects.filter(name__iexact='employee').exists():
-            return Role.objects.get(name__iexact='employee').id
-        else:
-            role = Role.objects.create(name='employee')
-            role.save()
-            return role.id
-
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100, default='Employee')
     image = models.ImageField(upload_to='static/massage/images/employees/', default='static/massage/images/profile-placeholder.svg')
@@ -128,7 +122,7 @@ class Assignment(Auditable):
 class Receipt(Auditable):
     id = models.CharField(max_length=100, default='EMS-01012024-0001', unique=True, primary_key=True, editable=False)
     assignment = models.ForeignKey(Assignment, on_delete=models.CASCADE)
-    cashier = models.ForeignKey(User, on_delete=models.CASCADE, default=1)
+    cashier = models.ForeignKey(User, on_delete=models.CASCADE, default=default_user)
     services = models.ManyToManyField(Service, through='ReceiptService')
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     total = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
@@ -137,7 +131,7 @@ class Receipt(Auditable):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.assignment.customer
+        return self.id
 
 class ReceiptService(Auditable):
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
@@ -150,3 +144,34 @@ class ReceiptService(Auditable):
 
     def __str__(self):
         return self.service.name
+    
+class ServiceFee(Auditable):
+    service = models.OneToOneField(Service, on_delete=models.CASCADE)
+    fee_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
+
+    def save(self, *args, **kwargs):
+        if self.fee_percentage < 0 or self.fee_percentage > 100:
+            raise ValidationError(_('Fee percentage must be between 0 and 100'))
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.service.name
+
+class EmployeePayment(Auditable):
+    receipt = models.OneToOneField(Receipt, on_delete=models.CASCADE)
+    fee_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    total = models.DecimalField(max_digits=9, decimal_places=2)
+    is_paid = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        self.fee_percentage = 0
+        self.total = 0
+        for service in self.receipt.services.all():
+            service_fee = ServiceFee.objects.filter(service=service).first()
+            if service_fee:
+                self.fee_percentage += service_fee.fee_percentage
+            self.total += service.price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.receipt.assignment.employee.name} - {self.receipt.assignment.customer}"
