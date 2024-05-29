@@ -124,6 +124,31 @@ p {
   border-bottom: 1px solid white;
 }
 
+.toast-container {
+  position: fixed;
+  bottom: 0;
+  right: 0;
+  padding: 10px;
+  max-width: 300px;
+}
+
+.success {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+.error {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+.toast-body button {
+  font-size: 8px;
+  cursor: pointer;
+}
+
 .navbar-nav {
   display: flex;
   gap: 8px;
@@ -216,6 +241,11 @@ p {
   flex-direction: column;
   justify-content: space-evenly;
   height: 100%;
+  gap: 8px;
+}
+
+.info-card-actions {
+  display: flex;
   gap: 8px;
 }
 
@@ -360,11 +390,36 @@ p {
   background-color: #4bff4b;
 }
 
+.active, .inactive {
+  padding-block: 8px;
+  padding-inline: 24px;
+  text-align: center;
+  width: fit-content;
+  border-radius: 24px;
+}
+
+.active {
+  background-color: #4bff4b;
+}
+
+.inactive {
+  background-color: #ff4b4b;
+}
+
 .btn:hover {
   cursor: pointer;
   outline: none !important;
   box-shadow: none !important;
   color: white;
+}
+
+.btn-link {
+  padding: 0;
+}
+
+.btn-link:hover {
+  text-decoration: underline;
+  color: #56a4ff;
 }
 
 .chart-wrapper {

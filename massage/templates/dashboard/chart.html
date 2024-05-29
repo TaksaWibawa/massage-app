@@ -13,6 +13,7 @@
         <div class="chairs">
           <div class="empty-cell"></div>
           {% for chair in chairs %}<h3 class="indicator">{{ chair }}</h3>{% endfor %}
+          {% if forloop.last and chairs|length|divisibleby:2 == False %}<div class="empty-cell"></div>{% endif %}
         </div>
         <div class="time-slots">
           {% for time_slot, row in TIME_SLOTS %}

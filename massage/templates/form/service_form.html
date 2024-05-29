@@ -13,50 +13,41 @@
           class="form-wrapper"
           id="service-form">
       {% csrf_token %}
+      
       {% for field in form %}
-        {% for error in field.errors %}
-          <div class="alert alert-danger text-center">
-            <p>{{ error }}</p>
-          </div>
-        {% endfor %}
-      {% endfor %}
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger text-center">
-          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        {% if field.name == 'image' %}
+        <div class="file-uploader">
+            <label for="{{ form.image.id_for_label }}">
+                {% if form.image.value %}
+                <img src="{{ form.instance.image.url }}"
+                     alt="Service Image"
+                     class="object-fit-contain" />
+                {% else %}
+                <img src="{% static 'massage/images/service-upload.svg' %}"
+                     alt="Service Image">
+                {% endif %}
+            </label>
+            {{ field }}
         </div>
-      {% endif %}
-      <div class="file-uploader">
-        <label for="{{ form.image.id_for_label }}">
-          {% if form.image.value %}
-            <img src="{{ form.instance.image.url }}"
-                 alt="Profile Image"
-                 class="object-fit-contain" />
-          {% else %}
-            <img src="{% static 'massage/images/service-upload.svg' %}"
-                 alt="Service Image" />
-          {% endif %}
-        </label>
-        {{ form.image }}
-      </div>
-      <div class="input-wrapper">
-        <label for="{{ form.name.id_for_label }}">Service Name</label>
-        {{ form.name }}
-      </div>
-      <div class="input-wrapper">
-        <label for="{{ form.price.id_for_label }}">Price</label>
-        {{ form.price }}
-      </div>
-      <div class="input-wrapper">
-        <label for="{{ form.duration.id_for_label }}">Duration (Mins)</label>
-        {{ form.duration }}
-      </div>
+        {% else %}
+        <div class="input-wrapper">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% if field.errors %}
+            {% for error in field.errors %}
+                <p class="text-danger small">{{ error }}</p>
+            {% endfor %}
+            {% endif %}
+        </div>
+        {% endif %}
+      {% endfor %}
+      
       <button type="submit" class="btn submit-button">Submit</button>
     </form>
   </section>
   <script>
       const fileInput = document.getElementById('image-upload');
       const img = document.querySelector('.file-uploader img');
-      console.log(fileInput);
       fileInput.addEventListener('change', function() {
           const file = this.files[0];
           if (file) {

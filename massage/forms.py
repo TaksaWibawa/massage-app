@@ -5,7 +5,8 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 from django import forms
 from datetime import time
-from .models import Role, Employee, Service, Assignment
+from .models import Role, Employee, Service, Assignment, GlobalSettings
+from .utils import get_global_setting
 
 
 class UserAdminForm(UserCreationForm):
@@ -29,6 +30,61 @@ class LoginForm(AuthenticationForm):
         self.user = user
         return self.cleaned_data
 
+class CreateUserForm(forms.ModelForm):
+    username = forms.CharField(required=True, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'id': 'username'}))
+    password = forms.CharField(required=True, widget=forms.PasswordInput(
+        attrs={'class': 'form-control', 'id': 'password'}))
+
+    class Meta:
+        model = User
+        fields = ["username", "password"]
+
+    def clean(self):
+        cleaned_data = super().clean()
+        username = cleaned_data.get('username')
+
+        if User.objects.filter(username=username).exists():
+            self.add_error('username', 'Username already exists')
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = User.objects.create_user(
+            username=self.cleaned_data.get('username'),
+            password=self.cleaned_data.get('password'),
+        )
+        user.save()
+        return user
+    
+class ChangePasswordForm(forms.Form):
+    username = forms.CharField(required=True, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'id': 'username', 'readonly': 'readonly'}))
+    new_password = forms.CharField(required=True, widget=forms.PasswordInput(
+        attrs={'class': 'form-control', 'id': 'new_password'}))
+    confirm_password = forms.CharField(required=True, widget=forms.PasswordInput(
+        attrs={'class': 'form-control', 'id': 'confirm_password'}))
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user')
+        super(ChangePasswordForm, self).__init__(*args, **kwargs)
+        self.fields['username'].initial = self.user.username
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get('new_password')
+        confirm_password = cleaned_data.get('confirm_password')
+
+        if new_password != confirm_password:
+            raise ValidationError("Passwords do not match")
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        self.user.set_password(self.cleaned_data.get('new_password'))
+        if commit:
+            self.user.save()
+        return self.user
 
 class EmployeeForm(forms.ModelForm):
     color = forms.CharField(required=True, widget=forms.TextInput(
@@ -41,37 +97,23 @@ class EmployeeForm(forms.ModelForm):
         attrs={'class': 'form-control', 'id': 'address'}))
     age = forms.IntegerField(required=True, widget=forms.NumberInput(
         attrs={'class': 'form-control', 'id': 'age'}))
-    username = forms.CharField(required=True, widget=forms.TextInput(
-        attrs={'class': 'form-control', 'id': 'username'}))
-    password = forms.CharField(required=True, widget=forms.PasswordInput(
-        attrs={'class': 'form-control', 'id': 'password'}))
     image = forms.ImageField(widget=forms.FileInput(
         attrs={'class': 'form-control', 'id': 'image-upload'}))
 
     class Meta:
         model = Employee
-        fields = ["image", "name", "phone",
-                  "address", "age", "username", "password", "color"]
+        fields = ["image", "color", "name", "phone", "address", "age"]
 
     def clean(self):
         cleaned_data = super().clean()
-        username = cleaned_data.get('username')
         image = cleaned_data.get('image')
 
         if image is None:
-            raise ValidationError("Please upload an image")
-
-        if User.objects.filter(username=username).exists():
-            raise ValidationError("Username already exists")
+            self.add_error('image', 'Please upload an image')
 
         return cleaned_data
 
-    def save(self, commit=True):
-        user = User.objects.create_user(
-            username=self.cleaned_data.get('username'),
-            password=self.cleaned_data.get('password'),
-        )
-        user.save()
+    def save(self, commit=True, user=None):
         self.instance.user = user
         return super(EmployeeForm, self).save(commit=commit)
 
@@ -88,7 +130,7 @@ class ServiceForm(forms.ModelForm):
 
     class Meta:
         model = Service
-        fields = ["name", "price", "duration", "image"]
+        fields = ["image", "name", "price", "duration"]
 
     def clean(self):
         cleaned_data = super().clean()
@@ -98,14 +140,14 @@ class ServiceForm(forms.ModelForm):
 
         if price and duration:
             if price == 0 and duration > 0:
-                raise ValidationError(
-                    "Price must be greater than 0 if duration is greater than 0")
+                self.add_error(
+                    'price', 'Price must be greater than 0 if duration is greater than 0')
             if price > 0 and duration == 0:
-                raise ValidationError(
-                    "Duration must be greater than 0 if price is greater than 0")
+                self.add_error(
+                    'duration', 'Duration must be greater than 0 if price is greater than 0')
 
         if image is None:
-            raise ValidationError("Please upload an image")
+            self.add_error('image', 'Please upload an image')
         return cleaned_data
 
     def save(self, commit=True):
@@ -133,17 +175,21 @@ class AssignmentForm(forms.ModelForm):
                 timezone.timedelta(minutes=service.duration)
 
             if end_date.time() > time(22, 0):
-                raise forms.ValidationError(
-                    'The selected service exceeds the working hours (18:00 - 22:00).')
+                self.add_error(
+                    'start_date', 'The selected time range exceeds the working hours. (18:00 - 22:00)')
 
             return end_date
-
-    service = forms.ModelChoiceField(queryset=Service.objects.all(), empty_label='', initial=None, required=True,
+        
+    def get_chair_choices():
+        max_chairs = get_global_setting('max chairs')
+        return [(None, '')] + [(i, i) for i in range(1, max_chairs + 1)]
+    
+    service = forms.ModelChoiceField(queryset=Service.objects.filter(is_active=True), empty_label='', initial=None, required=True,
                                      widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'service'}))
-    employee = forms.ModelChoiceField(queryset=Employee.objects.all(), empty_label='', initial=None, required=True,
+    employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True), empty_label='', initial=None, required=True,
                                       widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
     chair = forms.ChoiceField(
-        choices=[('', '')] + [(x, x) for x in range(1, 5)],
+        choices=get_chair_choices(),
         required=True,
         widget=forms.Select(
             attrs={'class': 'form-control form-select', 'id': 'chair'})
@@ -192,8 +238,10 @@ class AssignmentForm(forms.ModelForm):
                     pk=self.instance.pk)
 
             if overlapping_assignments.exists():
-                raise forms.ValidationError(
-                    'The selected employee is already occupied in the selected date and time range.')
+                self.add_error(
+                    'employee', 'The selected employee is already occupied in the selected date and time range.')
+                self.add_error(
+                    'start_date', 'The selected employee is already occupied in the selected date and time range.')
 
             # Check if the chair is occupied
             overlapping_assignments_chair = Assignment.objects.filter(
@@ -204,8 +252,10 @@ class AssignmentForm(forms.ModelForm):
             ).exclude(employee=employee)
 
             if overlapping_assignments_chair.exists():
-                raise forms.ValidationError(
-                    'The selected chair is already occupied in the selected date and time range.')
+                self.add_error(
+                    'chair', 'The selected chair is already occupied in the selected date and time range.')
+                self.add_error(
+                    'start_date', 'The selected chair is already occupied in the selected date and time range.')
 
         return cleaned_data
 
@@ -221,7 +271,7 @@ class ServiceChoiceField(forms.ModelChoiceField):
 
 class AdditionalTreatmentForm(forms.Form):
     additional_service = ServiceChoiceField(
-        queryset=Service.objects.all(),
+        queryset=Service.objects.filter(is_active=True),
         required=False,
         widget=forms.Select(attrs={'class': 'form-control form-select'}),
         label=''

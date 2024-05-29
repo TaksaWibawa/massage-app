@@ -26,8 +26,13 @@
               <p>{{ employee.address }}</p>
               <div class="info-card-actions">
                 <a href="{% url 'employee_edit' employee.id %}" class="btn edit-button">Edit</a>
-                <a href="{% url 'employee_delete' employee.id %}"
-                   class="btn delete-button">Delete</a>
+                <div class="{% if employee.is_active %}active{% else %}inactive{% endif %}">
+                  {% if employee.is_active %}
+                    Active
+                  {% else %}
+                    Inactive
+                  {% endif %}
+                </div>
               </div>
             </div>
           </li>

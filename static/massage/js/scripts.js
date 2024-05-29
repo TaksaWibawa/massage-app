@@ -9,3 +9,11 @@ function toggleSubmenu(element) {
     icon.classList.remove('fa-rotate-90');
   }
 }
+
+document.addEventListener('DOMContentLoaded', (event) => {
+  let toastElList = [].slice.call(document.querySelectorAll('.toast'));
+  let toastList = toastElList.map(function (toastEl) {
+    return new bootstrap.Toast(toastEl, { autohide: true });
+  });
+  toastList.forEach((toast) => toast.show());
+});

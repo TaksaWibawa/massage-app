@@ -1,31 +1,38 @@
-import json
-from django.utils import timezone
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth import login
 from datetime import datetime
-from .utils import get_global_setting
-from .models import Employee, Service, Assignment, Receipt, ReceiptService
-from .forms import LoginForm, EmployeeForm, ServiceForm, AssignmentForm, AdditionalServicesFormset
-from .decorator import supervisor_required, auth_required, protected
+from decimal import Decimal
+import json
+
+from django.contrib import messages
+from django.contrib.auth import login
+from django.db.models import Sum, F
+from django.db.models.functions import TruncDay
+from django.shortcuts import render, redirect, get_object_or_404
+from django.utils import timezone
+
 from .context_processors import chart_context
+from .decorator import auth_required, protected, supervisor_required
+from .forms import (AdditionalServicesFormset, AssignmentForm, EmployeeForm,
+                    LoginForm, ServiceForm, CreateUserForm, ChangePasswordForm)
+from .models import (Assignment, Employee, Receipt, ReceiptService, Service)
+from .utils import get_global_setting
 
 # Auth
-
-
 @protected
 def LoginPage(request):
     if request.method == 'POST':
         form = LoginForm(data=request.POST)
         if form.is_valid():
             login(request, form.user)
+            messages.success(request, 'Login successful.')
             return redirect('/')
+        
+        else:
+            messages.error(request, 'Invalid username or password.')
     else:
         form = LoginForm()
     return render(request, 'auth/login.html', {'form': form})
 
 # Dashboard
-
-
 @auth_required
 def LandingPage(request):
     return render(request, 'dashboard/landing_page.html')
@@ -69,7 +76,11 @@ def EditAssignmentPage(request, id):
         form = AssignmentForm(request.POST, instance=assignment)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Assignment has been updated successfully.')
             return redirect('chart')
+        
+        else:
+            messages.error(request, 'Failed to update assignment.')
     else:
         form = AssignmentForm(instance=assignment)
     return render(request, 'dashboard/assignment_edit.html', {'form': form})
@@ -80,7 +91,9 @@ def DeleteAssignmentPage(request, id):
     assignment = get_object_or_404(Assignment, id=id)
     if request.method == 'POST':
         assignment.delete()
+        messages.success(request, 'Assignment has been deleted successfully.')
         return redirect('chart')
+
     return render(request, 'dashboard/assignment_delete.html', {'assignment': assignment})
 
 
@@ -135,7 +148,11 @@ def ReceiptPage(request, id):
             for service in additional_services:
                 ReceiptService.objects.create(receipt=receipt, service=service)
 
+            messages.success(request, 'Receipt has been created successfully.')
             return redirect('chart')
+
+        else:
+            messages.error(request, 'Failed to create receipt.')
 
     else:
         formset = AdditionalServicesFormset(prefix='additional_services')
@@ -163,14 +180,15 @@ def NewAssignmentPage(request):
         form = AssignmentForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Assignment has been created successfully.')
             return redirect('chart')
+        else:
+            messages.error(request, 'Failed to create assignment.')
     else:
         form = AssignmentForm()
     return render(request, 'dashboard/assignment_new.html', {'form': form})
 
 # Employees
-
-
 @supervisor_required(allowed_roles=['supervisor'])
 def EmployeeListPage(request):
     employees = Employee.objects.filter(role__name__iexact='employee')
@@ -180,26 +198,54 @@ def EmployeeListPage(request):
 @supervisor_required(allowed_roles=['supervisor'])
 def EmployeeNewPage(request):
     if request.method == 'POST':
-        form = EmployeeForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()
+        user_form = CreateUserForm(request.POST)
+        employee_form = EmployeeForm(request.POST, request.FILES)
+        if user_form.is_valid() and employee_form.is_valid():
+            user = user_form.save()
+            employee_form.save(user=user)
+            messages.success(request, 'Employee has been created successfully.')
             return redirect('employee_list')
+        else:
+            messages.error(request, 'Failed to create employee.')
     else:
-        form = EmployeeForm()
-    return render(request, 'employees/employee_new.html', {'form': form})
-
+        user_form = CreateUserForm()
+        employee_form = EmployeeForm()
+    return render(request, 'employees/employee_new.html', {'user_form': user_form, 'employee_form': employee_form, 'is_edit_page': False})
 
 @supervisor_required(allowed_roles=['supervisor'])
 def EmployeeEditPage(request, id):
     employee = Employee.objects.get(id=id)
+    user = employee.user
     if request.method == 'POST':
-        form = EmployeeForm(request.POST, request.FILES, instance=employee)
+        employee_form = EmployeeForm(request.POST, request.FILES, instance=employee)
+        password_form = ChangePasswordForm(request.POST, user=user)
+        if employee_form.is_valid() and password_form.is_valid():
+            employee_form.save()
+            password_form.save()
+            messages.success(request, 'Employee and password have been updated successfully.')
+            return redirect('employee_list')
+        else:
+            messages.error(request, 'Failed to update employee.')
+    else:
+        employee_form = EmployeeForm(instance=employee)
+        password_form = ChangePasswordForm(user=user)
+    return render(request, 'employees/employee_edit.html', {'employee_form': employee_form, 'password_form': password_form, 'is_edit_page': True, 'employee_id': employee.id})
+
+@supervisor_required(allowed_roles=['supervisor'])
+def EmployeeChangePasswordPage(request, id):
+    employee = get_object_or_404(Employee, id=id)
+    user = employee.user
+    if request.method == 'POST':
+        form = ChangePasswordForm(request.POST, user=user)
         if form.is_valid():
             form.save()
-            return redirect('employee_list')
+            messages.success(request, 'Password has been updated successfully.')
+            return redirect('employee_edit', id=id)
+        else:
+            messages.error(request, 'Failed to update password.')
     else:
-        form = EmployeeForm(instance=employee)
-    return render(request, 'employees/employee_edit.html', {'form': form})
+        form = ChangePasswordForm(user=user)
+    return render(request, 'employees/employee_change_password.html', {'password_form': form})
 
 
 @supervisor_required(allowed_roles=['supervisor'])
@@ -211,8 +257,6 @@ def EmployeeDeletePage(request, id):
     return render(request, 'employees/employee_delete.html', {'employee': employee})
 
 # Services
-
-
 @supervisor_required(allowed_roles=['supervisor'])
 def ServiceListPage(request):
     services = Service.objects.all()
@@ -225,7 +269,11 @@ def ServiceNewPage(request):
         form = ServiceForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Service has been created successfully.')
             return redirect('service_list')
+        
+        else:
+            messages.error(request, 'Failed to create service.')
     else:
         form = ServiceForm()
     return render(request, 'services/service_new.html', {'form': form})
@@ -238,16 +286,20 @@ def ServiceEditPage(request, id):
         form = ServiceForm(request.POST, request.FILES, instance=service)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Service has been updated successfully.')
             return redirect('service_list')
+        
+        else:
+            messages.error(request, 'Failed to update service.')
     else:
         form = ServiceForm(instance=service)
     return render(request, 'services/service_edit.html', {'form': form})
-
 
 @supervisor_required(allowed_roles=['supervisor'])
 def ServiceDeletePage(request, id):
     service = get_object_or_404(Service, id=id)
     if request.method == 'POST':
         service.delete()
+        messages.success(request, 'Service has been deleted successfully.')
         return redirect('service_list')
     return render(request, 'services/service_delete.html', {'service': service})

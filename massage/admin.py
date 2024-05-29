@@ -5,10 +5,14 @@ from .models import Role, Employee, Service, Assignment, Receipt, ReceiptService
 from .forms import UserAdminForm
 
 class AuditableAdmin(admin.ModelAdmin):
-    list_display = ['created_at', 'created_by',
-                    'last_updated_at', 'last_updated_by']
-    readonly_fields = ['created_at', 'created_by',
-                       'last_updated_at', 'last_updated_by']
+    list_display = ['created_at', 'created_by', 'last_updated_at', 'last_updated_by']
+    readonly_fields = ['created_at', 'created_by', 'last_updated_at', 'last_updated_by']
+
+    def get_fieldsets(self, request, obj=None):
+        fieldsets = super().get_fieldsets(request, obj)
+        if obj:  # editing an existing object
+            return [(None, {'fields': [field for field in fieldsets[0][1]['fields'] if field not in self.readonly_fields]})]
+        return fieldsets
 
 class UserAdmin(DefaultUserAdmin):
     add_form = UserAdminForm

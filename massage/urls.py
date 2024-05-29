@@ -19,6 +19,7 @@ urlpatterns = [
   path('employee-list', views.EmployeeListPage, name='employee_list'),
   path('employee/create', views.EmployeeNewPage, name='employee_new'),
   path('employee/edit/<str:id>', views.EmployeeEditPage, name='employee_edit'),
+  path('employee/edit/change-password/<str:id>', views.EmployeeChangePasswordPage, name='employee_change_password'),
   path('employee/delete/<str:id>', views.EmployeeDeletePage, name='employee_delete'),
 
   # Service

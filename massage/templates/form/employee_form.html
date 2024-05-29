@@ -13,59 +13,56 @@
           class="form-wrapper"
           id="employee-form">
       {% csrf_token %}
-      {% for field in form %}
-        {% for error in field.errors %}
-          <div class="alert alert-danger text-center">
-            <p>{{ error }}</p>
+
+      {% for field in employee_form %}
+          {% if field.name == 'image' %}
+            <div class="file-uploader">
+                <label for="image-upload">
+                    {% if employee_form.image.value %}
+                    <img src="{{ employee_form.instance.image.url }}"
+                         alt="Profile Image"
+                         class="rounded-circle" />
+                    {% else %}
+                    <img src="{% static 'massage/images/image-upload.svg' %}"
+                         alt="Profile Image">
+                    {% endif %}
+                </label>
+                {{ field }}
+            </div>
+          {% elif field.name == 'color' %}
+            <div class="color-picker">
+                <label for="color">Color Code</label>
+                {{ field }}
+            </div>
+          {% else %}
+          <div class="input-wrapper">
+              <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+              {% for error in field.errors %}
+                  <p class="text-danger small">{{ error }}</p>
+              {% endfor %}
+              {% endif %}
+          </div>
+          {% endif %}
+      {% endfor %}
+      
+      {% if not is_edit_page %}
+        {% for field in user_form %}
+          <div class="input-wrapper">
+            <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+            {{ field }}
+            {% for error in field.errors %}
+              <p class="text-danger small">{{ error }}</p>
+            {% endfor %}
           </div>
         {% endfor %}
-      {% endfor %}
-      {% if form.non_field_errors %}
-        <div class="alert alert-danger text-center">
-          {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
-        </div>
       {% endif %}
-      <div class="file-uploader">
-        <label for="image-upload">
-          {% if form.image.value %}
-            <img src="{{ form.instance.image.url }}"
-                 alt="Profile Image"
-                 class="rounded-circle" />
-          {% else %}
-            <img src="{% static 'massage/images/image-upload.svg' %}"
-                 alt="Profile Image">
-          {% endif %}
-        </label>
-        {{ form.image }}
-      </div>
-      <div class="color-picker">
-        <label for="color">Color Code</label>
-        {{ form.color }}
-      </div>
-      <div class="input-wrapper">
-        <label for="name">Name</label>
-        {{ form.name }}
-      </div>
-      <div class="input-wrapper">
-        <label for="phone">Tlp. Number</label>
-        {{ form.phone }}
-      </div>
-      <div class="input-wrapper">
-        <label for="address">Address</label>
-        {{ form.address }}
-      </div>
-      <div class="input-wrapper">
-        <label for="age">Age</label>
-        {{ form.age }}
-      </div>
-      <div class="input-wrapper">
-        <label for="username">Username</label>
-        {{ form.username }}
-      </div>
-      <div class="input-wrapper">
-        <label for="password">Password</label>
-        {{ form.password }}
-      </div>
+      
+      {% if is_edit_page %}
+        <a href="{% url 'employee_change_password' employee_id %}" class="btn btn-link">Change Password</a>
+      {% endif %}
+      
       <button type="submit" class="btn submit-button">Submit</button>
     </form>
   </section>

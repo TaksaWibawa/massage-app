@@ -37,11 +37,7 @@
       <hr class="receipt-line">
       <div class="receipt-additional">
         <span class="receipt-additional__label">+Additional Treatment</span>
-        {% for form in formset %}
-            <div class="receipt-additional__service">
-                {{ form.as_p }}
-            </div>
-        {% endfor %}
+        {% for form in formset %}<div class="receipt-additional__service">{{ form.as_p }}</div>{% endfor %}
       </div>
       <div class="receipt-total">
         <div class="receipt-total__labels">
@@ -64,23 +60,22 @@
       {{ formset.management_form }}
     </form>
   </section>
-
   <script>
-    let count = {{ formset.total_form_count }};
-    const maxFields = {{ formset.max_num }};
-    let total = {{ assignment.service.price }};
-    let subTotalElement = document.querySelector('.receipt-total__values .receipt-total__value:nth-child(1)');
-    let totalElement = document.querySelector('.receipt-total__values .receipt-total__value:nth-child(3)');
-    let servicesPrices = JSON.parse('{{ services_prices|escapejs }}');
-    let additionalLabel = document.querySelector('.receipt-additional__label');
-    let lastSelectedServices = {};
-  
-    additionalLabel.addEventListener('click', function() {
-        if (count < maxFields) {
-            const servicesContainer = document.querySelector('.receipt-additional');
-            const newService = document.createElement('div');
-            newService.classList.add('receipt-additional__service');
-            newService.innerHTML = `
+      let count = {{ formset.total_form_count }};
+      const maxFields = {{ formset.max_num }};
+      let total = {{ assignment.service.price }};
+      let subTotalElement = document.querySelector('.receipt-total__values .receipt-total__value:nth-child(1)');
+      let totalElement = document.querySelector('.receipt-total__values .receipt-total__value:nth-child(3)');
+      let servicesPrices = JSON.parse('{{ services_prices|escapejs }}');
+      let additionalLabel = document.querySelector('.receipt-additional__label');
+      let lastSelectedServices = {};
+
+      additionalLabel.addEventListener('click', function() {
+          if (count < maxFields) {
+              const servicesContainer = document.querySelector('.receipt-additional');
+              const newService = document.createElement('div');
+              newService.classList.add('receipt-additional__service');
+              newService.innerHTML = `
               <div class="input-wrapper">
                 <div class="select-wrapper">
                   <i class="fa-solid fa-play select-icon"></i>
@@ -89,24 +84,24 @@
                 </div>
               </div>
             `.replace(/__prefix__/g, count);
-            servicesContainer.appendChild(newService);
-            count++;
-            document.querySelector('#id_additional_services-TOTAL_FORMS').value = count;
-  
-            let selectField = newService.querySelector('select[name^="additional_services-"][name$="-additional_service"]');
-            selectField.addEventListener('change', function(e) {
-              let serviceId = e.target.value;
-              if (lastSelectedServices[selectField.name]) {
-                total -= servicesPrices[lastSelectedServices[selectField.name]];
-              }
-              if (serviceId) {
-                total += servicesPrices[serviceId];
-              }
-              lastSelectedServices[selectField.name] = serviceId;
-              subTotalElement.textContent = total;
-              totalElement.textContent = total;
-          });
-        }
-    });
+              servicesContainer.appendChild(newService);
+              count++;
+              document.querySelector('#id_additional_services-TOTAL_FORMS').value = count;
+
+              let selectField = newService.querySelector('select[name^="additional_services-"][name$="-additional_service"]');
+              selectField.addEventListener('change', function(e) {
+                  let serviceId = e.target.value;
+                  if (lastSelectedServices[selectField.name]) {
+                      total -= servicesPrices[lastSelectedServices[selectField.name]];
+                  }
+                  if (serviceId) {
+                      total += servicesPrices[serviceId];
+                  }
+                  lastSelectedServices[selectField.name] = serviceId;
+                  subTotalElement.textContent = total;
+                  totalElement.textContent = total;
+              });
+          }
+      });
   </script>
 {% endblock content %}
