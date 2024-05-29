@@ -203,7 +203,7 @@ p {
 .info-card {
   display: grid;
   grid-template-columns: auto 1fr;
-  column-gap: 64px;
+  column-gap: 48px;
   align-items: center;
 }
 
