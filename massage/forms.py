@@ -5,7 +5,7 @@ from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import authenticate
 from django import forms
 from datetime import time
-from .models import Role, Employee, Service, Assignment, GlobalSettings
+from .models import Role, Employee, Service, Assignment
 from .utils import get_global_setting
 
 
@@ -113,8 +113,7 @@ class EmployeeForm(forms.ModelForm):
 
         return cleaned_data
 
-    def save(self, commit=True, user=None):
-        self.instance.user = user
+    def save(self, commit=True):
         return super(EmployeeForm, self).save(commit=commit)
 
 

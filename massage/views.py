@@ -1,11 +1,8 @@
 from datetime import datetime
-from decimal import Decimal
 import json
 
 from django.contrib import messages
 from django.contrib.auth import login
-from django.db.models import Sum, F
-from django.db.models.functions import TruncDay
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
@@ -170,11 +167,6 @@ def RecapPage(request):
 
 
 @supervisor_required(allowed_roles=['supervisor'])
-def ReportPage(request):
-    return render(request, 'dashboard/report.html')
-
-
-@supervisor_required(allowed_roles=['supervisor'])
 def NewAssignmentPage(request):
     if request.method == 'POST':
         form = AssignmentForm(request.POST)
@@ -218,18 +210,15 @@ def EmployeeEditPage(request, id):
     user = employee.user
     if request.method == 'POST':
         employee_form = EmployeeForm(request.POST, request.FILES, instance=employee)
-        password_form = ChangePasswordForm(request.POST, user=user)
-        if employee_form.is_valid() and password_form.is_valid():
+        if employee_form.is_valid():
             employee_form.save()
-            password_form.save()
-            messages.success(request, 'Employee and password have been updated successfully.')
+            messages.success(request, 'Employee has been updated successfully.')
             return redirect('employee_list')
         else:
             messages.error(request, 'Failed to update employee.')
     else:
         employee_form = EmployeeForm(instance=employee)
-        password_form = ChangePasswordForm(user=user)
-    return render(request, 'employees/employee_edit.html', {'employee_form': employee_form, 'password_form': password_form, 'is_edit_page': True, 'employee_id': employee.id})
+    return render(request, 'employees/employee_edit.html', {'employee_form': employee_form, 'is_edit_page': True, 'employee_id': employee.id})
 
 @supervisor_required(allowed_roles=['supervisor'])
 def EmployeeChangePasswordPage(request, id):
