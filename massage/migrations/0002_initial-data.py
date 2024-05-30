@@ -19,6 +19,8 @@ def add_global_settings(apps, schema_editor):
         GlobalSettings.objects.create(name='Max Chairs', type='number', value='8')
     if not GlobalSettings.objects.filter(name='PPN').exists():
         GlobalSettings.objects.create(name='PPN', type='percentage', value='10')
+    if not GlobalSettings.objects.filter(name='Service Fee').exists():
+        GlobalSettings.objects.create(name='Service Fee', type='percentage', value='40')
 
 def remove_global_settings(apps, schema_editor):
     GlobalSettings = apps.get_model('massage', 'GlobalSettings')

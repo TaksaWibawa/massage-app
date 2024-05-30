@@ -80,6 +80,7 @@ TEMPLATES = [
 
                 'massage.context_processors.nav_menus',
                 'massage.context_processors.chart_context',
+                'massage.context_processors.assignment_context',
             ],
         },
     },

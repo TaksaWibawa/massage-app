@@ -55,7 +55,6 @@ p {
   min-height: 100vh;
   overflow-x: hidden;
   padding-block: 50px;
-  padding-inline: 25px;
   position: relative;
   row-gap: 24px;
 }
@@ -597,4 +596,151 @@ p {
 
 .receipt-additional__service {
   margin-block: 8px;
+}
+
+.filter-wrapper {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+
+.filter-wrapper input, .filter-wrapper .form-select {
+  border: none;
+  border-radius: 0;
+  outline: none;
+  background: white;
+}
+
+.filter-wrapper input:focus,
+.filter-wrapper input:active,
+.filter-wrapper .form-select:focus,
+.filter-wrapper .form-select:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.select-wrapper {
+  position: relative;
+}
+
+.select-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%) rotate(90deg);
+  z-index: 1;
+  color: #56a4ff;
+  font-size: 12px;
+  pointer-events: none;
+}
+
+.filter-wrapper .form-select option {
+  background-color: white;
+  color: #1a1918;
+}
+
+.payment-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.table-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 24px;
+}
+
+.payment-form__employee {
+  font-size: 25px;
+  font-weight: 700;
+  margin-left: 40px;
+}
+
+.payment-form__table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+.payment-form__table th:nth-child(1), .payment-form__table td:nth-child(1) {
+  width: 20%;
+}
+.payment-form__table th:nth-child(2), .payment-form__table td:nth-child(2) {
+  width: 30%;
+}
+.payment-form__table th:nth-child(3), .payment-form__table td:nth-child(3) {
+  width: 15%;
+}
+.payment-form__table th:nth-child(4), .payment-form__table td:nth-child(4) {
+  width: 15%;
+}
+.payment-form__table th:nth-child(5), .payment-form__table td:nth-child(5) {
+  width: 20%;
+}
+
+.payment-form__table th, .payment-form__table td {
+  text-align: center;
+  word-wrap: break-word;
+  padding-block: 8px;
+}
+
+.payment-form__table th {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.payment-form__table td {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.paid {
+  background-color: #8afc80a8;
+}
+
+.paid:hover, .unpaid:hover {
+  cursor: pointer;
+}
+
+.paid:hover {
+  background-color: #8afc80a8;
+}
+
+.unpaid:hover {
+  background-color: #f0f0f0;
+}
+
+.payment-form__info {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  padding-inline: 24px;
+}
+
+.payment-form__info__legend, .payment-form__info__fee {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.payment-form__info__legend__paid {
+  width: 16px;
+  height: 16px;
+  background-color: #8afc80a8;
+}
+
+.payment-form__info__fee span {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.payment-actions {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  margin-top: 24px;
 }

@@ -1,0 +1,121 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load templatetags %}
+{% block title %}
+  Recap
+{% endblock title %}
+{% block pageTitle %}
+  Recap
+{% endblock pageTitle %}
+{% block content %}
+  <section class="section-wrapper justify-content-start mt-5 w-100">
+    <form method="GET">
+      <div class="filter-wrapper">
+          <div class="filter-wrapper__date">
+            {{ filter_form.date }}
+          </div>
+          <div class="filter-wrapper__employee">
+            <div class="select-wrapper">
+              <i class="fa-solid fa-play select-icon"></i>
+              {{ filter_form.employee }}
+              <div class="select-arrow"></div>
+            </div>
+          </div>
+      </div>
+      <input id="filter-submit" type="submit" value="Filter" hidden>
+    </form>
+    <form method="POST" class="payment-form">
+      {% csrf_token %}
+      {% regroup employee_payments by receipt.assignment.employee as payments_by_employee %}
+      {% for employee_payments in payments_by_employee %}
+        <div class="table-group">
+          <h2 class="payment-form__employee">{{ employee_payments.grouper }}</h2>
+          <table class="payment-form__table">
+            <tr>
+              <th>Date</th>
+              <th>Treatment</th>
+              <th>Price</th>
+              <th>% Fee</th>
+              <th>Fee</th>
+              <th class="d-none">Paid</th>
+            </tr>
+            {% for payment in employee_payments.list %}
+              <tr class="{% if payment.is_paid %}paid{% else %}unpaid{% endif %}">
+                <td>{{ payment.receipt.assignment.start_date|date:"d/m/Y" }}</td>
+                <td>{{ payment.receipt.services.all|join:", " }}</td>
+                <td>{{ payment.receipt.total|currency_format_dot }}</td>
+                <td>{{ payment.fee_percentage|percentage }}</td>
+                <td>{{ payment.total_fee|currency_format_dot }}</td>
+                <td class="d-none">
+                  <input type="checkbox" name="payment_id" value="{{ payment.id }}" {% if payment.is_paid %}checked disabled{% endif %}>
+                </td>
+              </tr>
+            {% endfor %}
+          </table>
+        </div>
+      {% endfor %}
+      {% if employee_payments %}
+        <div class="payment-form__info">
+          <div class="payment-form__info__legend">
+            <div class="payment-form__info__legend__paid"></div>
+            <span>Paid Off</span>
+          </div>
+          <div class="payment-form__info__fee">
+            <span>Total : </span>
+            <span>{{ total_payment|currency_format_dot }}</span>
+          </div>
+        </div>
+      {% endif %}
+      <input id="pay-selected" type="submit" value="Pay Selected" class="d-none">
+    </form>
+    {% if employee_payments %}
+      <div class="payment-actions">
+        <button id="mock-pay-selected" class="btn submit-button">Pay</button>
+        <form method="POST">
+          {% csrf_token %}
+          <input type="hidden" name="pay_all" value="true">
+          <button type="submit" class="btn active">Pay All</button>
+        </form>
+      </div>
+    {% else %}
+      <div class="text-center">
+        <p>No payment available</p>
+      </div>
+    {% endif %}
+  </section>
+  <script>
+    let rows = document.querySelectorAll('.payment-form__table tr');
+    rows.forEach(row => {
+      row.addEventListener('click', function() {
+        let checkbox = this.querySelector('input[type="checkbox"]');
+  
+        if (checkbox && !checkbox.disabled) {
+          this.classList.toggle('selected');
+  
+          if (this.classList.contains('selected')) {
+            this.style.backgroundColor = '#C8C8C8';
+          } else {
+            this.style.backgroundColor = '';
+          }
+  
+          checkbox.checked = !checkbox.checked;
+        }
+      });
+    });
+  
+    let mockPaySelected = document.getElementById('mock-pay-selected');
+    if (mockPaySelected) {
+      mockPaySelected.addEventListener('click', function() {
+        document.getElementById('pay-selected').click();
+      });
+    }
+  
+    document.getElementById('date').addEventListener('change', function() {
+      document.getElementById('filter-submit').click();
+    });
+  
+    document.getElementById('employee').addEventListener('change', function() {
+      document.getElementById('filter-submit').click();
+    });
+  </script>
+{% endblock content %}

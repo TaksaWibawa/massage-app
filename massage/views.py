@@ -12,7 +12,7 @@ from django.utils import timezone
 from .context_processors import chart_context
 from .decorator import auth_required, protected, supervisor_required
 from .forms import (AdditionalServicesFormset, AssignmentForm, EmployeeForm,
-                    LoginForm, ServiceForm, CreateUserForm, ChangePasswordForm)
+                    LoginForm, ServiceForm, CreateUserForm, ChangePasswordForm, RecapFilterForm)
 from .models import (Assignment, Employee, Receipt, ReceiptService, Service, EmployeePayment)
 from .utils import get_global_setting
 
@@ -113,7 +113,7 @@ def NewAssignmentPage(request):
 
 @supervisor_required(allowed_roles=['supervisor'])
 def ReceiptPage(request, id):
-    ppn = get_global_setting('ppn')
+    fee_percentage = get_global_setting('Service Fee')
     assignment = get_object_or_404(Assignment, id=id)
 
     if assignment.is_done:
@@ -166,8 +166,8 @@ def ReceiptPage(request, id):
             # will be changed later
             EmployeePayment.objects.create(
                 receipt=receipt,
-                fee_percentage=ppn,
-                total=total_price * (1 + ppn / 100),
+                fee_percentage=fee_percentage,
+                total_fee=total_price * fee_percentage / 100,
                 is_paid=False
             )
 
@@ -189,22 +189,43 @@ def ReceiptPage(request, id):
 
 @auth_required
 def RecapPage(request):
-    employee_payments = EmployeePayment.objects.all()
+    filter_form = RecapFilterForm(request.GET)
 
-    if 'date' in request.GET:
-        date = request.GET['date']
-        employee_payments = employee_payments.filter(assignment__start_date__date=date)
+    employees = Employee.objects.filter(role__name__iexact='employee')
+    # order by employee name
+    employee_payments = EmployeePayment.objects.all().order_by('receipt__assignment__employee')
 
-    if 'employee_id' in request.GET:
-        employee_id = request.GET['employee_id']
-        employee_payments = employee_payments.filter(assignment__employee__id=employee_id)
+    if filter_form.is_valid():
+        employee = filter_form.cleaned_data.get('employee')
+        selected_date = filter_form.cleaned_data.get('date')
+
+        if employee:
+            employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
+
+        if selected_date:
+            employee_payments = employee_payments.filter(receipt__assignment__start_date__date=selected_date)
+
+    if 'payment_id' in request.POST:
+        payment_ids = request.POST.getlist('payment_id')
+        EmployeePayment.objects.filter(id__in=payment_ids).update(is_paid=True)
+        messages.success(request, f'{len(payment_ids)} payments have been paid off.')
 
     if 'pay_all' in request.POST:
         employee_payments.update(is_paid=True)
+        messages.success(request, 'All payments have been paid off.')
 
-    total_payment = employee_payments.aggregate(total=Sum('total'))['total'] or 0
+    total_payment = employee_payments.aggregate(total=Sum('total_fee'))['total'] or 0
 
-    return render(request, 'dashboard/recap.html', {'employee_payments': employee_payments, 'total_payment': total_payment})
+    context = {
+        'filter_form': filter_form,
+        'date': selected_date if filter_form.is_valid() else timezone.now().strftime('%Y-%m-%d'),
+        'employee_id': employee.id if employee else None,
+        'employee_payments': employee_payments,
+        'employees': employees,
+        'total_payment': total_payment,
+    }
+
+    return render(request, 'dashboard/recap.html', context)
 
 @supervisor_required(allowed_roles=['supervisor'])
 def ReportPage(request):
@@ -255,7 +276,6 @@ def EmployeeNewPage(request):
 @supervisor_required(allowed_roles=['supervisor'])
 def EmployeeEditPage(request, id):
     employee = Employee.objects.get(id=id)
-    user = employee.user
     if request.method == 'POST':
         employee_form = EmployeeForm(request.POST, request.FILES, instance=employee)
         if employee_form.is_valid():

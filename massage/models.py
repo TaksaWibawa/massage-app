@@ -145,32 +145,23 @@ class ReceiptService(Auditable):
     def __str__(self):
         return self.service.name
     
-class ServiceFee(Auditable):
-    service = models.OneToOneField(Service, on_delete=models.CASCADE)
-    fee_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0.00)
-
-    def save(self, *args, **kwargs):
-        if self.fee_percentage < 0 or self.fee_percentage > 100:
-            raise ValidationError(_('Fee percentage must be between 0 and 100'))
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.service.name
-
 class EmployeePayment(Auditable):
     receipt = models.OneToOneField(Receipt, on_delete=models.CASCADE)
     fee_percentage = models.DecimalField(max_digits=5, decimal_places=2)
-    total = models.DecimalField(max_digits=9, decimal_places=2)
-    is_paid = models.BooleanField(default=False)
+    total_fee = models.DecimalField(max_digits=9, decimal_places=2)
+    is_paid = models.BooleanField(default=False, verbose_name='Paid Off')
+
+    def calculate_total_prices(self):
+        total = 0
+        for service in self.receipt.services.all():
+            total += service.price
+        return total
 
     def save(self, *args, **kwargs):
-        self.fee_percentage = 0
-        self.total = 0
-        for service in self.receipt.services.all():
-            service_fee = ServiceFee.objects.filter(service=service).first()
-            if service_fee:
-                self.fee_percentage += service_fee.fee_percentage
-            self.total += service.price
+        from .utils import get_global_setting
+        self.fee_percentage = get_global_setting('Service Fee')
+        total = self.calculate_total_prices()
+        self.total_fee = total * self.fee_percentage / 100
         super().save(*args, **kwargs)
 
     def __str__(self):

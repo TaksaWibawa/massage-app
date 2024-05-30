@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 from django.contrib import admin
-from .models import Role, Employee, Service, Assignment, Receipt, ReceiptService, GlobalSettings, EmployeePayment, ServiceFee
+from .models import Role, Employee, Service, Assignment, Receipt, ReceiptService, GlobalSettings, EmployeePayment
 from .forms import UserAdminForm
 
 class AuditableAdmin(admin.ModelAdmin):
@@ -82,8 +82,8 @@ class ReceiptAdmin(AuditableAdmin):
     inlines = [ReceiptServiceInline]
     list_display = ['id', 'assignment', 'total'] + AuditableAdmin.list_display
 
-# class EmployeePaymentAdmin(AuditableAdmin):
-#     list_display = ['receipt', 'fee_percentage', 'total'] + AuditableAdmin.list_display
+class EmployeePaymentAdmin(AuditableAdmin):
+    list_display = ['receipt', 'fee_percentage', 'total_fee'] + AuditableAdmin.list_display
 
 
 admin.site.unregister(User)
@@ -94,4 +94,4 @@ admin.site.register(Employee, EmployeeAdmin)
 admin.site.register(Service, ServiceAdmin)
 admin.site.register(Assignment, AssignmentAdmin)
 admin.site.register(Receipt, ReceiptAdmin)
-# admin.site.register(EmployeePayment, EmployeePaymentAdmin)
+admin.site.register(EmployeePayment, EmployeePaymentAdmin)

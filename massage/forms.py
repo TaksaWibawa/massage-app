@@ -297,3 +297,33 @@ AdditionalServicesFormset = forms.formset_factory(
     extra=0,
     max_num=3
 )
+
+class RecapFilterForm(forms.Form):
+    employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True), empty_label='All', required=False,
+                                      widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
+    date = forms.DateField(required=False, widget=forms.DateInput(
+        attrs={'class': 'form-control', 'type': 'date', 'id': 'date'}))
+
+    def __init__(self, *args, **kwargs):
+        super(RecapFilterForm, self).__init__(*args, **kwargs)
+        self.fields['date'].widget.attrs['value'] = timezone.now().strftime('%Y-%m-%d')
+
+    
+class RecapPaySelectedForm(forms.Form):
+    assignment_ids = forms.CharField(widget=forms.HiddenInput(attrs={'id': 'assignment-ids'}))
+    total_fee = forms.DecimalField(widget=forms.HiddenInput(attrs={'id': 'total-fee'}))
+    fee_percentage = forms.DecimalField(widget=forms.HiddenInput(attrs={'id': 'fee-percentage'}))
+    total_payment = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'id': 'total-payment'}))
+    total_payment.widget.attrs['min'] = 0
+    total_payment.widget.attrs['step'] = 1000
+    total_payment.widget.attrs['required'] = True
+
+    def clean(self):
+        cleaned_data = super().clean()
+        total_payment = cleaned_data.get('total_payment')
+        total_fee = cleaned_data.get('total_fee')
+
+        if total_payment < total_fee:
+            self.add_error('total_payment', 'Total payment must be greater than or equal to total fee')
+
+        return cleaned_data

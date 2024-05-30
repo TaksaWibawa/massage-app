@@ -91,21 +91,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='ServiceFee',
-            fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('last_updated_at', models.DateTimeField(auto_now=True)),
-                ('fee_percentage', models.DecimalField(decimal_places=2, default=0.0, max_digits=5)),
-                ('created_by', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='created_%(class)s_set', to=settings.AUTH_USER_MODEL)),
-                ('last_updated_by', models.ForeignKey(blank=True, editable=False, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='updated_%(class)s_set', to=settings.AUTH_USER_MODEL)),
-                ('service', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, to='massage.service')),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
             name='ReceiptService',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
