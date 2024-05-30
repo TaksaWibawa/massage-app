@@ -188,8 +188,8 @@ def ReceiptPage(request, id):
 
 @auth_required
 def RecapPage(request):
-    filter_form = RecapFilterForm(request.GET or None, initial={'date': timezone.now().date()})
-    selected_date = timezone.now().date()
+    filter_form = RecapFilterForm(request.GET or None, initial={'date': timezone.localtime().date()})
+    selected_date = timezone.localtime().date()
     employee = None
 
     if filter_form.is_valid():
@@ -220,7 +220,7 @@ def RecapPage(request):
 
     context = {
         'filter_form': filter_form,
-        'date': selected_date if selected_date else timezone.now().strftime('%Y-%m-%d'),
+        'date': selected_date,
         'employee_id': employee.id if employee else None,
         'employee_payments': employee_payments,
         'employees': employees,
@@ -231,7 +231,7 @@ def RecapPage(request):
 
 @supervisor_required(allowed_roles=['supervisor'])
 def ReportPage(request):
-    filter_form = ReportFilterForm(request.GET or None, initial={'month': timezone.now().month})
+    filter_form = ReportFilterForm(request.GET or None, initial={'month': datetime.now().month})
     current_year = datetime.now().year
     month = datetime.now().month
 
