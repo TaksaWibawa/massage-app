@@ -1,12 +1,13 @@
-from django.utils import timezone
-from django.core.exceptions import ValidationError
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth import authenticate
-from django import forms
-from datetime import time
 from .models import Role, Employee, Service, Assignment
 from .utils import get_global_setting
+from datetime import time
+from django import forms
+from django.contrib.auth import authenticate
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+import calendar
 
 
 class UserAdminForm(UserCreationForm):
@@ -298,6 +299,14 @@ AdditionalServicesFormset = forms.formset_factory(
     max_num=3
 )
 
+class ReportFilterForm(forms.Form):
+    MONTH_CHOICES = [(i, calendar.month_name[i]) for i in range(1, 13)]
+    month = forms.ChoiceField(choices=MONTH_CHOICES, required=False, widget=forms.Select(
+        attrs={'class': 'form-control form-select', 'id': 'month'}))
+    
+    def __init__(self, *args, **kwargs):
+        super(ReportFilterForm, self).__init__(*args, **kwargs)
+
 class RecapFilterForm(forms.Form):
     employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True), empty_label='All', required=False,
                                       widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
@@ -306,7 +315,6 @@ class RecapFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(RecapFilterForm, self).__init__(*args, **kwargs)
-        self.fields['date'].widget.attrs['value'] = timezone.now().strftime('%Y-%m-%d')
 
     
 class RecapPaySelectedForm(forms.Form):

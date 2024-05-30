@@ -1,11 +1,48 @@
 {% extends "core/base.html" %}
 {% load static %}
+{% load templatetags %}
 {% block title %}Report{% endblock %}
 {% block pageTitle %}
   Report
 {% endblock pageTitle %}
 {% block content %}
-  <section class="section-wrapper justify-content-start mt-5 px-4 w-100 gap-1">
-    {{ report }}
+  <section class="section-wrapper justify-content-start mt-5 w-100">
+    <form method="GET">
+      <div class="filter-wrapper">
+        <div class="filter-wrapper__month">
+          <div class="select-wrapper">
+            <i class="fa-solid fa-play select-icon"></i>
+            {{ filter_form.month }}
+            <div class="select-arrow"></div>
+          </div>
+        </div>
+      </div>
+      <input id="filter-submit" type="submit" value="Filter" hidden>
+    </form>
+    <table class="report__table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Revenue</th>
+          <th>Cost</th>
+          <th>Nett Revenue</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in report %}
+          <tr>
+            <td>{{ item.date }}</td>
+            <td>{{ item.revenue|currency_format_dot }}</td>
+            <td>{{ item.cost|currency_format_dot }}</td>
+            <td>{{ item.nett_revenue|currency_format_dot }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
   </section>
+  <script>
+    const filterSubmit = document.getElementById('filter-submit');
+    const monthSelect = document.querySelector('.filter-wrapper__month select');
+    monthSelect.addEventListener('change', () => filterSubmit.click());
+  </script>
 {% endblock %}

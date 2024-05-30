@@ -1,10 +1,9 @@
 from datetime import datetime
-from decimal import Decimal
 import json
 
 from django.contrib import messages
 from django.contrib.auth import login
-from django.db.models import Sum, F
+from django.db.models import Sum
 from django.db.models.functions import TruncDay
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
@@ -12,7 +11,7 @@ from django.utils import timezone
 from .context_processors import chart_context
 from .decorator import auth_required, protected, supervisor_required
 from .forms import (AdditionalServicesFormset, AssignmentForm, EmployeeForm,
-                    LoginForm, ServiceForm, CreateUserForm, ChangePasswordForm, RecapFilterForm)
+                    LoginForm, ServiceForm, CreateUserForm, ChangePasswordForm, ReportFilterForm, RecapFilterForm)
 from .models import (Assignment, Employee, Receipt, ReceiptService, Service, EmployeePayment)
 from .utils import get_global_setting
 
@@ -189,21 +188,24 @@ def ReceiptPage(request, id):
 
 @auth_required
 def RecapPage(request):
-    filter_form = RecapFilterForm(request.GET)
+    filter_form = RecapFilterForm(request.GET or None, initial={'date': timezone.now().date()})
+    selected_date = timezone.now().date()
+    employee = None
+
+    if filter_form.is_valid():
+        selected_date = filter_form.cleaned_data.get('date')
 
     employees = Employee.objects.filter(role__name__iexact='employee')
-    # order by employee name
     employee_payments = EmployeePayment.objects.all().order_by('receipt__assignment__employee')
+
+    if selected_date:
+        employee_payments = employee_payments.filter(receipt__assignment__start_date__date=selected_date)
 
     if filter_form.is_valid():
         employee = filter_form.cleaned_data.get('employee')
-        selected_date = filter_form.cleaned_data.get('date')
 
         if employee:
             employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
-
-        if selected_date:
-            employee_payments = employee_payments.filter(receipt__assignment__start_date__date=selected_date)
 
     if 'payment_id' in request.POST:
         payment_ids = request.POST.getlist('payment_id')
@@ -218,7 +220,7 @@ def RecapPage(request):
 
     context = {
         'filter_form': filter_form,
-        'date': selected_date if filter_form.is_valid() else timezone.now().strftime('%Y-%m-%d'),
+        'date': selected_date if selected_date else timezone.now().strftime('%Y-%m-%d'),
         'employee_id': employee.id if employee else None,
         'employee_payments': employee_payments,
         'employees': employees,
@@ -229,23 +231,28 @@ def RecapPage(request):
 
 @supervisor_required(allowed_roles=['supervisor'])
 def ReportPage(request):
-    # Aggregate total revenue per day
-    revenue_per_day = Receipt.objects.annotate(date=TruncDay('created_at')).values('date').annotate(revenue=Sum('total')).order_by('date')
+    filter_form = ReportFilterForm(request.GET or None, initial={'month': timezone.now().month})
+    current_year = datetime.now().year
+    month = datetime.now().month
 
-    # Aggregate total cost per day
-    cost_per_day = Assignment.objects.filter(is_done=True).annotate(date=TruncDay('start_date')).values('date').annotate(cost=Sum(F('service__price') * Decimal('0.4'))).order_by('date')
+    if filter_form.is_valid():
+        month = filter_form.cleaned_data.get('month')
 
-    # Combine revenue and cost data
+    # will be changed later based on either both of them need to be paid or include everything
+    revenue_per_day = Receipt.objects.filter(created_at__year=current_year, created_at__month=month, employeepayment__is_paid=True).annotate(date=TruncDay('created_at')).values('date').annotate(revenue=Sum('total')).order_by('date')
+
+    cost_per_day = EmployeePayment.objects.filter(receipt__created_at__year=current_year, receipt__created_at__month=month, is_paid=True).annotate(date=TruncDay('receipt__created_at')).values('date').annotate(cost=Sum('total_fee')).order_by('date')
+
     report = []
     for revenue, cost in zip(revenue_per_day, cost_per_day):
         report.append({
-            'date': revenue['date'],
+            'date': revenue['date'].strftime('%d/%m/%Y'),
             'revenue': revenue['revenue'],
             'cost': cost['cost'],
             'nett_revenue': revenue['revenue'] - cost['cost'],
         })
     
-    return render(request, 'dashboard/report.html', {'report': report})
+    return render(request, 'dashboard/report.html', {'report': report, 'filter_form': filter_form})
 
 # Employees
 @supervisor_required(allowed_roles=['supervisor'])
