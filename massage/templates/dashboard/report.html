@@ -29,14 +29,20 @@
         </tr>
       </thead>
       <tbody>
+      {% if report %}
         {% for item in report %}
           <tr>
             <td>{{ item.date }}</td>
             <td>{{ item.revenue|currency_format_dot }}</td>
-            <td>{{ item.cost|currency_format_dot }}</td>
-            <td>{{ item.nett_revenue|currency_format_dot }}</td>
+            <td>{% if item.cost == 'unpaid' %}Unpaid{% else %}{{ item.cost|currency_format_dot }}{% endif %}</td>
+            <td>{% if item.nett_revenue == 'unpaid' %}{{ item.revenue|currency_format_dot }} (Unpaid){% else %}{{ item.nett_revenue|currency_format_dot }}{% endif %}</td>
           </tr>
         {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="4"class="empty-row">No Report Found</td>
+        </tr>
+      {% endif %}
       </tbody>
     </table>
   </section>

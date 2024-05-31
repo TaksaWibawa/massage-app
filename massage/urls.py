@@ -20,11 +20,9 @@ urlpatterns = [
   path('employee/create', views.EmployeeNewPage, name='employee_new'),
   path('employee/edit/<str:id>', views.EmployeeEditPage, name='employee_edit'),
   path('employee/edit/change-password/<str:id>', views.EmployeeChangePasswordPage, name='employee_change_password'),
-  path('employee/delete/<str:id>', views.EmployeeDeletePage, name='employee_delete'),
 
   # Service
   path('service-list', views.ServiceListPage, name='service_list'),
   path('service/create', views.ServiceNewPage, name='service_new'),
   path('service/edit/<str:id>', views.ServiceEditPage, name='service_edit'),
-  path('service/delete/<str:id>', views.ServiceDeletePage, name='service_delete'),
 ]

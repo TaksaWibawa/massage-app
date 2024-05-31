@@ -207,7 +207,7 @@ class AssignmentForm(forms.ModelForm):
     )
     customer = forms.CharField(required=True, widget=forms.TextInput(
         attrs={'class': 'form-control', 'id': 'customer'}))
-    phone = forms.CharField(required=True, widget=forms.TextInput(
+    phone = forms.CharField(required=False, widget=forms.TextInput(
         attrs={'class': 'form-control', 'id': 'phone'}))
     start_date = forms.SplitDateTimeField(
         required=True,
@@ -299,22 +299,22 @@ AdditionalServicesFormset = forms.formset_factory(
     max_num=3
 )
 
-class ReportFilterForm(forms.Form):
+class MonthFilterForm(forms.Form):
     MONTH_CHOICES = [(i, calendar.month_name[i]) for i in range(1, 13)]
     month = forms.ChoiceField(choices=MONTH_CHOICES, required=False, widget=forms.Select(
         attrs={'class': 'form-control form-select', 'id': 'month'}))
     
     def __init__(self, *args, **kwargs):
-        super(ReportFilterForm, self).__init__(*args, **kwargs)
+        super(MonthFilterForm, self).__init__(*args, **kwargs)
 
-class RecapFilterForm(forms.Form):
+class EmployeeFilterForm(forms.Form):
     employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True), empty_label='All', required=False,
                                       widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
     date = forms.DateField(required=False, widget=forms.DateInput(
         attrs={'class': 'form-control', 'type': 'date', 'id': 'date'}))
 
     def __init__(self, *args, **kwargs):
-        super(RecapFilterForm, self).__init__(*args, **kwargs)
+        super(EmployeeFilterForm, self).__init__(*args, **kwargs)
 
     
 class RecapPaySelectedForm(forms.Form):

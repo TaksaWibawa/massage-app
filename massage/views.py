@@ -11,7 +11,7 @@ from django.utils import timezone
 from .context_processors import chart_context
 from .decorator import auth_required, protected, supervisor_required
 from .forms import (AdditionalServicesFormset, AssignmentForm, EmployeeForm,
-                    LoginForm, ServiceForm, CreateUserForm, ChangePasswordForm, ReportFilterForm, RecapFilterForm)
+                    LoginForm, ServiceForm, CreateUserForm, ChangePasswordForm, MonthFilterForm, EmployeeFilterForm)
 from .models import (Assignment, Employee, Receipt, ReceiptService, Service, EmployeePayment)
 from .utils import get_global_setting
 
@@ -40,11 +40,26 @@ def LandingPage(request):
 @supervisor_required(allowed_roles=['supervisor'])
 def ChartPage(request):
     context = chart_context(request)
-    tasks = Assignment.objects.filter(
-        start_date__date=timezone.localtime().date(), is_done=False)
+
+    filter_form = EmployeeFilterForm(request.GET or None, initial={'date': timezone.localtime().date()})
+    
+    employee = None
+    selected_date = timezone.localtime().date()
+    tasks = Assignment.objects.all().order_by('start_date')
+    
+    if filter_form.is_valid():
+        selected_date = filter_form.cleaned_data.get('date')
+
+    if selected_date:
+        tasks = tasks.filter(start_date__date=selected_date)
+
+    if filter_form.is_valid():
+        employee = filter_form.cleaned_data.get('employee')
+
+        if employee:
+            tasks = tasks.filter(employee=employee)
 
     tasks_with_positions = []
-
     for task in tasks:
         start = timezone.localtime(task.start_date).time()
         end = timezone.localtime(task.end_date).time()
@@ -64,6 +79,8 @@ def ChartPage(request):
         time = datetime.strptime(time_slot, '%H:%M')
         row = ((time.hour * 60 + time.minute - 18 * 60) / 240) * 100
         context['TIME_SLOTS'][i] = (time_slot, row)
+    
+    context['filter_form'] = filter_form
 
     return render(request, 'dashboard/chart.html', context)
 
@@ -188,7 +205,7 @@ def ReceiptPage(request, id):
 
 @auth_required
 def RecapPage(request):
-    filter_form = RecapFilterForm(request.GET or None, initial={'date': timezone.localtime().date()})
+    filter_form = EmployeeFilterForm(request.GET or None, initial={'date': timezone.localtime().date()})
     selected_date = timezone.localtime().date()
     employee = None
 
@@ -231,27 +248,30 @@ def RecapPage(request):
 
 @supervisor_required(allowed_roles=['supervisor'])
 def ReportPage(request):
-    filter_form = ReportFilterForm(request.GET or None, initial={'month': datetime.now().month})
+    filter_form = MonthFilterForm(request.GET or None, initial={'month': datetime.now().month})
     current_year = datetime.now().year
     month = datetime.now().month
 
     if filter_form.is_valid():
         month = filter_form.cleaned_data.get('month')
 
-    # will be changed later based on either both of them need to be paid or include everything
-    revenue_per_day = Receipt.objects.filter(created_at__year=current_year, created_at__month=month, employeepayment__is_paid=True).annotate(date=TruncDay('created_at')).values('date').annotate(revenue=Sum('total')).order_by('date')
+    revenue_per_day = Receipt.objects.filter(created_at__year=current_year, created_at__month=month).annotate(date=TruncDay('created_at')).values('date').annotate(revenue=Sum('total')).order_by('date')
 
-    cost_per_day = EmployeePayment.objects.filter(receipt__created_at__year=current_year, receipt__created_at__month=month, is_paid=True).annotate(date=TruncDay('receipt__created_at')).values('date').annotate(cost=Sum('total_fee')).order_by('date')
+    cost_per_day = EmployeePayment.objects.filter(receipt__created_at__year=current_year, receipt__created_at__month=month).annotate(date=TruncDay('receipt__created_at')).values('date', 'is_paid', 'total_fee').order_by('date')
 
     report = []
-    for revenue, cost in zip(revenue_per_day, cost_per_day):
+    for revenue in revenue_per_day:
+        costs = [cost for cost in cost_per_day if cost['date'] == revenue['date']]
+        total_cost = sum(cost['total_fee'] for cost in costs if cost['is_paid'])
+        is_unpaid = any(cost['is_paid'] == False for cost in costs)
+
         report.append({
             'date': revenue['date'].strftime('%d/%m/%Y'),
             'revenue': revenue['revenue'],
-            'cost': cost['cost'],
-            'nett_revenue': revenue['revenue'] - cost['cost'],
+            'cost': 'unpaid' if is_unpaid else total_cost,
+            'nett_revenue': 'unpaid' if is_unpaid else revenue['revenue'] - total_cost
         })
-    
+
     return render(request, 'dashboard/report.html', {'report': report, 'filter_form': filter_form})
 
 # Employees

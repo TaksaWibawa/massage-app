@@ -8,6 +8,24 @@
 {% endblock pageTitle %}
 {% block content %}
   <section class="chart-wrapper mt-5">
+    <div class="chart-actions">
+      <a href="{% url 'new_assignment' %}" class="btn new-button">+ Add Assignment</a>
+      <form method="GET">
+        <div class="filter-wrapper">
+            <div class="filter-wrapper__date">
+              {{ filter_form.date }}
+            </div>
+            <div class="filter-wrapper__employee">
+              <div class="select-wrapper">
+                <i class="fa-solid fa-play select-icon"></i>
+                {{ filter_form.employee }}
+                <div class="select-arrow"></div>
+              </div>
+            </div>
+        </div>
+        <input id="filter-submit" type="submit" value="Filter" hidden>
+      </form>
+    </div>
     {% for chairs in CHAIRS_GROUPED %}
       <div class="content-group">
         <div class="chairs">
@@ -29,15 +47,17 @@
                 <div class="task"
                      style="grid-row-start: {{ task_with_position.start_row }};
                             grid-row-end: {{ task_with_position.end_row }};
-                            background-color: {{ task_with_position.task.employee.color }}"
+                            background-color: {% if task_with_position.task.is_done %}#C8C8C8{% else %}{{ task_with_position.task.employee.color }}{% endif %};"
                      data-bs-toggle="modal"
                      data-bs-target="#taskModal"
                      data-task-id="{{ task_with_position.task.id }}"
                      data-task-chair="{{ task_with_position.task.chair }}"
                      data-task-customer="{{ task_with_position.task.customer }}"
+                     data-task-phone="{{ task_with_position.task.phone }}"
                      data-task-employee="{{ task_with_position.task.employee.name }}"
                      data-task-service="{{ task_with_position.task.service }}"
-                     data-task-time="{{ task_with_position.start_time }} - {{ task_with_position.end_time }}">
+                     data-task-time="{{ task_with_position.start_time }} - {{ task_with_position.end_time }}"
+                     data-task-done="{{ task_with_position.task.is_done }}">
                   <div class="task-item">
                     <div class="task-item__time">{{ task_with_position.start_time }} - {{ task_with_position.end_time }}</div>
                     <div class="task-item__employee">{{ task_with_position.task.employee.name }}</div>
@@ -70,6 +90,7 @@
             <div class="modal-item__time" id="task-time"></div>
             <div class="modal-item__chair" id="task-chair"></div>
             <div class="modal-item__customer" id="task-customer"></div>
+            <div class="modal-item__phone" id="task-phone"></div>
             <div class="modal-item__employee" id="task-employee"></div>
             <div class="modal-item__service" id="task-service"></div>
           </div>
@@ -87,19 +108,29 @@
     </div>
   </div>
   <script>
+      document.getElementById('date').addEventListener('change', function() {
+        document.getElementById('filter-submit').click();
+      });
+    
+      document.getElementById('employee').addEventListener('change', function() {
+        document.getElementById('filter-submit').click();
+      });
+
       let payUrlTemplate = "{% url 'receipt' 9999 %}";
       let editUrlTemplate = "{% url 'edit_assignment' 9999 %}";
       let deleteUrlTemplate = "{% url 'delete_assignment' 9999 %}";
 
       function getTaskData(task) {
-          return {
-              id: task.getAttribute('data-task-id'),
-              chair: task.getAttribute('data-task-chair'),
-              customer: task.getAttribute('data-task-customer'),
-              employee: task.getAttribute('data-task-employee'),
-              service: task.getAttribute('data-task-service'),
-              time: task.getAttribute('data-task-time'),
-          };
+        return {
+            id: task.getAttribute('data-task-id'),
+            chair: task.getAttribute('data-task-chair'),
+            customer: task.getAttribute('data-task-customer'),
+            phone: task.getAttribute('data-task-phone'),
+            employee: task.getAttribute('data-task-employee'),
+            service: task.getAttribute('data-task-service'),
+            time: task.getAttribute('data-task-time'),
+            is_done: task.getAttribute('data-task-done') === 'True',
+        };
       }
 
       const taskModal = document.getElementById('taskModal');
@@ -110,15 +141,22 @@
           const task = document.querySelector(`.task[data-task-id="${taskId}"]`);
           const taskData = getTaskData(task);
 
+          if (taskData.is_done) {
+            document.querySelector('.modal-footer').classList.add('d-none');
+          } else {
+            document.querySelector('.modal-footer').classList.remove('d-none');
+          }
+
           this.dataset.taskId = taskId;
 
           document.querySelector('.pay-button').href = payUrlTemplate.replace('9999', taskId);
           document.querySelector('.edit-button').href = editUrlTemplate.replace('9999', taskId);
           document.querySelector('.delete-button').href = deleteUrlTemplate.replace('9999', taskId);
 
-          document.getElementById('task-time').textContent = `Time: ${taskData.time}`;
+          document.getElementById('task-time').textContent = `Time: ${taskData.time} ${taskData.is_done ? '(Finished)' : '(On Going)'}`;
           document.getElementById('task-chair').textContent = `Chair Number: ${taskData.chair}`;
           document.getElementById('task-customer').textContent = `Customer Name: ${taskData.customer}`;
+          document.getElementById('task-phone').textContent = `Phone Number: ${taskData.phone ? taskData.phone : '-'}`;
           document.getElementById('task-employee').textContent = `Employee in Charge: ${taskData.employee}`;
           document.getElementById('task-service').textContent = `Service: ${taskData.service}`;
       });
