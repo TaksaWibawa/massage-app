@@ -58,9 +58,9 @@
           <ul class="navbar-nav">
             {% for menu in MENU_ITEMS %}
               {% for key, value in menu.items %}
-                <div class="menu" onclick="toggleSubmenu(this)">
+                <div class="menu" onclick="toggleSubmenu(event)">
                   <div class="menu-toggle">
-                    <i class="fa-solid fa-play"></i>
+                    <i class="fa-solid fa-play fa-rotate-90"></i>
                     <span class="menu-heading">{{ key }}</span>
                   </div>
                   <ul class="submenu-list">

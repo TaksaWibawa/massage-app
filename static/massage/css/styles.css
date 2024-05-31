@@ -175,6 +175,7 @@ p {
 }
 
 .submenu-list {
+  display: block;
   margin-left: 8px;
 }
 
