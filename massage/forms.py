@@ -230,6 +230,27 @@ class AssignmentForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['chair'].choices = self.get_chair_choices()
 
+    def check_overlapping_assignments(self, start_date, end_date, employee=None, chair=None):
+        # Check if there is an assignment on the same date range for a chair
+        if chair and Assignment.objects.exclude(id=self.instance.id).filter(
+            chair=chair,
+            start_date__lt=end_date,
+            end_date__gt=start_date,
+        ).exists():
+            self.add_error(
+                'chair', 'The selected chair is already occupied at this time.')
+            self.add_error(
+                'start_date', 'The selected time range overlaps with another assignment.')
+    
+        # Check if an employee is assigned to multiple assignments on the same date range
+        if employee and Assignment.objects.exclude(id=self.instance.id).filter(
+            employee=employee,
+            start_date__lt=end_date,
+            end_date__gt=start_date,
+        ).exists():
+            self.add_error(
+                'employee', 'The selected employee is already occupied at this time.')
+
     def clean(self):
         cleaned_data = super().clean()
         start_date = cleaned_data.get('start_date')
@@ -240,37 +261,8 @@ class AssignmentForm(forms.ModelForm):
         if start_date and service:
             end_date = self.calculate_end_time()
 
-            # Check if the employee is occupied
-            overlapping_assignments = Assignment.objects.filter(
-                employee=employee,
-                start_date__lt=end_date,
-                end_date__gt=start_date,
-                is_done=False
-            )
-
-            if self.instance.pk:
-                overlapping_assignments = overlapping_assignments.exclude(
-                    pk=self.instance.pk)
-
-            if overlapping_assignments.exists():
-                self.add_error(
-                    'employee', 'The selected employee is already occupied in the selected date and time range.')
-                self.add_error(
-                    'start_date', 'The selected employee is already occupied in the selected date and time range.')
-
-            # Check if the chair is occupied
-            overlapping_assignments_chair = Assignment.objects.filter(
-                chair=chair,
-                start_date__lt=end_date,
-                end_date__gt=start_date,
-                is_done=False
-            ).exclude(employee=employee)
-
-            if overlapping_assignments_chair.exists():
-                self.add_error(
-                    'chair', 'The selected chair is already occupied in the selected date and time range.')
-                self.add_error(
-                    'start_date', 'The selected chair is already occupied in the selected date and time range.')
+            # Check for overlapping assignments
+            self.check_overlapping_assignments(start_date, end_date, employee=employee, chair=chair)
 
         return cleaned_data
 
