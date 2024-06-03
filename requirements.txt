@@ -7,3 +7,4 @@ Django==4.2
 fontawesomefree==6.5.1
 pillow==10.3.0
 psycopg2==2.9.9
+xhtml2pdf==0.2.15

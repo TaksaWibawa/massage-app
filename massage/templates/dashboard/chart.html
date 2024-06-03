@@ -96,13 +96,11 @@
           </div>
         </div>
         <div class="modal-footer">
-          <a type="button" class="btn pay-button" href="{% url 'receipt' 9999 %}">Payment</a>
-          <a type="button"
-             class="btn edit-button"
-             href="{% url 'edit_assignment' 9999 %}">Edit</a>
-          <a type="button"
-             class="btn delete-button"
-             href="{% url 'delete_assignment' 9999 %}">Delete</a>
+          <a type="button" class="btn pay-button" href="{% url 'receipt' 9999 %}">Print</a>
+          <div class="not-done-buttons">
+            <a type="button" class="btn edit-button" href="{% url 'edit_assignment' 9999 %}">Edit</a>
+            <a type="button" class="btn delete-button" href="{% url 'delete_assignment' 9999 %}">Delete</a>
+          </div>
         </div>
       </div>
     </div>
@@ -142,9 +140,11 @@
           const taskData = getTaskData(task);
 
           if (taskData.is_done) {
-            document.querySelector('.modal-footer').classList.add('d-none');
+            document.querySelector('.not-done-buttons').classList.add('d-none');
+            document.querySelector('.pay-button').textContent = 'Print';
           } else {
-            document.querySelector('.modal-footer').classList.remove('d-none');
+            document.querySelector('.not-done-buttons').classList.remove('d-none');
+            document.querySelector('.pay-button').textContent = 'Payment';
           }
 
           this.dataset.taskId = taskId;

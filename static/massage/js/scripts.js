@@ -12,7 +12,6 @@ function toggleSubmenu(event) {
     icon.classList.remove('fa-rotate-90');
   } else {
     submenuList.style.display = 'block';
-    console.log('open');
     icon.classList.add('fa-rotate-90');
   }
 }

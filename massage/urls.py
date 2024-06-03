@@ -1,28 +1,33 @@
 from django.urls import path
-from . import views
+from .views import auth, dashboard, employee, assignment, service, receipt
 
 urlpatterns = [
   # Auth
-  path('login', views.LoginPage, name='login'),
+  path('login', auth.LoginPage, name='login'),
 
   # Dashboard
-  path('', views.LandingPage, name='landing_page'),
-  path('chart', views.ChartPage, name='chart'),
-  path('recap', views.RecapPage, name='recap'),
-  path('report', views.ReportPage, name='report'),
-  path('assignment/create' , views.NewAssignmentPage, name='new_assignment'),
-  path('assignment/edit/<str:id>', views.EditAssignmentPage, name='edit_assignment'),
-  path('assignment/delete/<str:id>', views.DeleteAssignmentPage, name='delete_assignment'),
-  path('assignment/pay/<str:id>', views.ReceiptPage, name='receipt'),
+  path('', dashboard.LandingPage, name='landing_page'),
+  path('chart', dashboard.ChartPage, name='chart'),
+  path('recap', dashboard.RecapPage, name='recap'),
+  path('report', dashboard.ReportPage, name='report'),
+
+  # Assignment
+  path('assignment/create' , assignment.NewAssignmentPage, name='new_assignment'),
+  path('assignment/edit/<str:id>', assignment.EditAssignmentPage, name='edit_assignment'),
+  path('assignment/delete/<str:id>', assignment.DeleteAssignmentPage, name='delete_assignment'),
 
   # Employee
-  path('employee-list', views.EmployeeListPage, name='employee_list'),
-  path('employee/create', views.EmployeeNewPage, name='employee_new'),
-  path('employee/edit/<str:id>', views.EmployeeEditPage, name='employee_edit'),
-  path('employee/edit/change-password/<str:id>', views.EmployeeChangePasswordPage, name='employee_change_password'),
+  path('employee-list', employee.EmployeeListPage, name='employee_list'),
+  path('employee/create', employee.EmployeeNewPage, name='employee_new'),
+  path('employee/edit/<str:id>', employee.EmployeeEditPage, name='employee_edit'),
+  path('employee/edit/change-password/<str:id>', employee.EmployeeChangePasswordPage, name='employee_change_password'),
 
   # Service
-  path('service-list', views.ServiceListPage, name='service_list'),
-  path('service/create', views.ServiceNewPage, name='service_new'),
-  path('service/edit/<str:id>', views.ServiceEditPage, name='service_edit'),
+  path('service-list', service.ServiceListPage, name='service_list'),
+  path('service/create', service.ServiceNewPage, name='service_new'),
+  path('service/edit/<str:id>', service.ServiceEditPage, name='service_edit'),
+
+  # Receipt
+  path('assignment/pay/<str:id>', receipt.ReceiptPage, name='receipt'),
+  path('assignment/pay/<str:id>/download', receipt.finalize_receipt, name='download_receipt'),
 ]

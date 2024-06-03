@@ -247,6 +247,7 @@ class AssignmentForm(forms.ModelForm):
             employee=employee,
             start_date__lt=end_date,
             end_date__gt=start_date,
+            is_done=False,
         ).exists():
             self.add_error(
                 'employee', 'The selected employee is already occupied at this time.')

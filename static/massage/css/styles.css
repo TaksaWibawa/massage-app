@@ -450,6 +450,7 @@ p {
   gap: 24px;
   height: 100%;
   position: relative;
+  z-index: 0;
 }
 
 .content-group .chairs {
@@ -520,7 +521,7 @@ p {
   background-color: #5291ac;
 }
 
-.receipt-header {
+.receipt-header, .print-receipt__header {
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -565,8 +566,12 @@ p {
   gap: 8px;
 }
 
-.receipt-info-left p, .receipt-info-right p, .receipt-services p, .receipt-total__label, .receipt-total__value, .receipt-additional__label {
+.receipt-info-left p, .receipt-info-right p, .receipt-services p, .receipt-total__label, .receipt-total__value, .receipt-additional__label, .receipt-additional__empty, .receipt-additional__title {
   font-size: 14px;
+}
+
+.receipt-additional__title {
+  margin-bottom: 8px;
 }
 
 .receipt-info-right p, .receipt-total p {

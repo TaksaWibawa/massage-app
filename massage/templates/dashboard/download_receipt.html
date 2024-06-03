@@ -1,0 +1,154 @@
+{% load templatetags %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Receipt</title>
+    <style>
+      @page {
+        size: 90mm 130mm;
+        margin: 5mm;
+        margin-top: 10mm;
+        margin-bottom: 10mm;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        padding: 0;
+        font-size: 28px;
+      }
+
+      table {
+        width: 100%;
+        -pdf-keep-in-frame-mode: shrink;
+      }
+
+      .print-receipt__header {
+        text-align: center;
+      }
+
+      .print-receipt__header h1,
+      p {
+        margin: 0;
+        padding: 0;
+      }
+
+      .print-receipt__header p {
+        font-size: 14px;
+      }
+
+      .left {
+        text-align: left;
+      }
+
+      .right {
+        text-align: right;
+      }
+
+      .print-receipt__total__title {
+        width: 70%;
+      }
+
+      .print-receipt__total__value {
+        width: 30%;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      class="print-receipt__header"
+      id="headerContent"
+    >
+      <h1>Massage</h1>
+      <p>Jl. Raya Puputan No.1, Renon</p>
+      <p>0857-3829-1234</p>
+    </div>
+
+    <hr />
+
+    <table
+      class="print-receipt__info"
+      id="infoContent"
+    >
+      <tr>
+        <td class="left">
+          <p>Invoice: {{ invoice_number }}</p>
+          <p>Date: {% now "d/m/Y" %}</p>
+          <p>Time: {% now "H:i" %}</p>
+        </td>
+        <td class="right">
+          <p>Therapist: {{ assignment.employee.name }}</p>
+          <p>Customer: {{ assignment.customer }}</p>
+          <p>Cashier: Admin</p>
+        </td>
+      </tr>
+    </table>
+
+    <hr />
+
+    <table
+      class="print-receipt__service"
+      id="serviceContent"
+    >
+      <tr>
+        <td class="left">
+          <p>{{ assignment.service.name }}</p>
+        </td>
+        <td class="right">
+          <p>{{ assignment.service.price|currency_format_dot }}</p>
+        </td>
+      </tr>
+    </table>
+
+    <hr />
+
+    <p>Additional Treatment :</p>
+    <table
+      class="print-receipt__additional"
+      id="additionalContent"
+    >
+      <tbody>
+        {% if additional_services %} {% for service in additional_services %}
+        <tr class="print-receipt__services">
+          <td class="left">- {{ service.name }}</td>
+          <td class="right">{{ service.price|currency_format_dot }}</td>
+        </tr>
+        {% endfor %} {% else %}
+        <tr>
+          <td>
+            <p>- No additional treatment</p>
+          </td>
+        </tr>
+        {% endif %}
+      </tbody>
+    </table>
+
+    <hr />
+
+    <table
+      class="print-receipt__total"
+      id="totalContent"
+    >
+      <tr>
+        <td class="right print-receipt__total__title">Sub Total :</td>
+        <td class="right print-receipt__total__value">{{ assignment.service.price|currency_format_dot }}</td>
+      </tr>
+      <tr>
+        <td class="right print-receipt__total__title">Discount :</td>
+        <td class="right print-receipt__total__value">-0</td>
+      </tr>
+      <tr>
+        <td class="right print-receipt__total__title">Total :</td>
+        <td class="right print-receipt__total__value">{{ assignment.service.price|currency_format_dot }}</td>
+      </tr>
+      <tr>
+        <td class="right print-receipt__total__title">Payment Method :</td>
+        <td class="right print-receipt__total__value">Cash</td>
+      </tr>
+    </table>
+  </body>
+</html>
