@@ -41,10 +41,8 @@ def generate_pdf(request, invoice_number, user, assignment, total_price):
             })
     else:
         additional_services = request.session.get('additional_services', [])
-        if additional_services:
-            additional_services = Service.objects.filter(id__in=additional_services).values('name', 'price')
-        else:
-            raise Exception('No additional services found')
+        additional_services = Service.objects.filter(id__in=additional_services).values('name', 'price')
+
 
     data = {
         'invoice_number': invoice_number,

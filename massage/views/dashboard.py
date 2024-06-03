@@ -110,16 +110,20 @@ def RecapPage(request):
         if employee:
             employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
 
-    if 'payment_id' in request.POST:
-        payment_ids = request.POST.getlist('payment_id')
-        EmployeePayment.objects.filter(id__in=payment_ids).update(is_paid=True)
-        messages.success(request, f'{len(payment_ids)} payments have been paid off.')
-
-    if 'pay_all' in request.POST:
-        all_payments = employee_payments.filter(is_paid=False)
-        all_payments.update(is_paid=True)
-        messages.success(request, 'All payments have been paid off.')
-
+    if request.method == 'POST':
+        selected_payments = request.POST.getlist('payment_id')
+        pay_all = 'pay_all' in request.POST
+    
+        if not selected_payments and not pay_all:
+            messages.error(request, 'Please select at least one payment to pay off.')
+        else:
+            if selected_payments:
+                EmployeePayment.objects.filter(id__in=selected_payments).update(is_paid=True)
+                messages.success(request, f'{len(selected_payments)} payments have been paid off.')
+            if pay_all:
+                EmployeePayment.objects.filter(is_paid=False).update(is_paid=True)
+                messages.success(request, 'All payments have been paid off.')
+    
     total_payment = employee_payments.aggregate(total=Sum('total_fee'))['total'] or 0
 
     context = {
