@@ -58,6 +58,7 @@ def ReceiptPage(request, id):
                 return response
             except Exception as e:
                 messages.error(request, e)
+                return JsonResponse({'error': str(e)}, status=500)
 
         else:
             messages.error(request, 'Invalid form data')

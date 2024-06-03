@@ -119,15 +119,37 @@
                 throw new Error('Failed to generate receipt');
             }
         })
-        .then(blob => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.style.display = 'none';
-            a.href = url;
-            a.download = `Invoice-${formData.get('receipt_id')}.pdf`
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
+        .then(blob => {      
+          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      
+          if (isMobile && isSafari) {
+              const reader = new FileReader();
+              reader.onloadend = function() {
+                  const base64data = reader.result;
+                  const byteCharacters = atob(base64data.split(',')[1]);
+                  const byteNumbers = new Array(byteCharacters.length);
+                  for (let i = 0; i < byteCharacters.length; i++) {
+                      byteNumbers[i] = byteCharacters.charCodeAt(i);
+                  }
+                  const byteArray = new Uint8Array(byteNumbers);
+                  const blob = new Blob([byteArray], { type: 'application/pdf' });
+                  const blobUrl = window.URL.createObjectURL(blob);
+                  const link = document.createElement('a');
+                  link.href = blobUrl;
+                  link.download = `Invoice-${formData.get('receipt_id')}.pdf`;
+                  link.target = '_blank';
+                  link.click();
+              };
+              reader.readAsDataURL(blob);
+          } else {
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `Invoice-${formData.get('receipt_id')}.pdf`;
+              a.click();
+              window.URL.revokeObjectURL(url);
+          }
 
             return fetch("{% url 'download_receipt' assignment.id %}", {
                 method: 'POST',
