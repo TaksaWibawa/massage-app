@@ -50,7 +50,7 @@ def ReceiptPage(request, id):
             request.session['fee_percentage'] = fee_percentage
 
             try:
-                pdf_bytes = generate_pdf(request, invoice_number, request.user, assignment, total_price)
+                pdf_bytes = generate_pdf(request, invoice_number, request.user, assignment)
 
                 response = HttpResponse(pdf_bytes, content_type='application/pdf')
                 response['Content-Disposition'] = f'attachment; filename=Invoice_{invoice_number}.pdf'
