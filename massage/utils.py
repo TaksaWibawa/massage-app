@@ -1,7 +1,7 @@
 from xhtml2pdf import pisa
 from io import BytesIO
 from django.template.loader import get_template
-from .models import GlobalSettings, ReceiptService, Service
+from .models import GlobalSettings, ReceiptService, Service, Receipt
 
 
 def get_global_setting(name):
@@ -29,8 +29,9 @@ def render_to_pdf(template_src, context_dict={}):
         return None
 
 
-def generate_pdf(request, invoice_number, user, assignment, total_price):
+def generate_pdf(request, invoice_number, user, assignment):
     additional_services_qs = ReceiptService.objects.filter(receipt=invoice_number)
+    total_price_qs = Receipt.objects.filter(id=invoice_number)
 
     if additional_services_qs.exists():
         additional_services = []
@@ -43,6 +44,10 @@ def generate_pdf(request, invoice_number, user, assignment, total_price):
         additional_services = request.session.get('additional_services', [])
         additional_services = Service.objects.filter(id__in=additional_services).values('name', 'price')
 
+    if total_price_qs.exists():
+        total_price = total_price_qs[0].total
+    else:
+        total_price = request.session.get('total_price', 0)
 
     data = {
         'invoice_number': invoice_number,

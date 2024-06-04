@@ -119,7 +119,7 @@ class EmployeeForm(forms.ModelForm):
 
         return cleaned_data
 
-    def save(self, commit=True, user=None):
+    def save(self, commit=True):
         return super(EmployeeForm, self).save(commit=commit)
 
 
@@ -171,10 +171,7 @@ class AssignmentForm(forms.ModelForm):
         if not (start_time <= value.time() <= end_time):
             raise ValidationError("Time must be between 18:00 and 22:00.")
 
-    def calculate_end_time(self):
-        start_date = self.cleaned_data.get('start_date')
-        service = self.cleaned_data.get('service')
-
+    def calculate_end_time(self, start_date=None, service=None):
         if start_date and service:
             end_date = start_date + \
                 timezone.timedelta(minutes=service.duration)
@@ -182,7 +179,7 @@ class AssignmentForm(forms.ModelForm):
             if end_date.time() > time(22, 0):
                 self.add_error(
                     'start_date', 'The selected time range exceeds the working hours. (18:00 - 22:00)')
-
+            
             return end_date
         
     def get_chair_choices(self):
@@ -216,8 +213,8 @@ class AssignmentForm(forms.ModelForm):
         widget=forms.SplitDateTimeWidget(
             date_format='%Y-%m-%d',
             time_format='%H:%M',
-            date_attrs={'type': 'date', 'class': 'form-control'},
-            time_attrs={'type': 'time', 'class': 'form-control'},
+            date_attrs={'type': 'date', 'class': 'form-control', 'min': timezone.now().date().isoformat()},
+            time_attrs={'type': 'time', 'class': 'form-control'}
         ),
     )
 
@@ -259,10 +256,11 @@ class AssignmentForm(forms.ModelForm):
         chair = cleaned_data.get('chair')
         employee = cleaned_data.get('employee')
 
-        if start_date and service:
-            end_date = self.calculate_end_time()
+        if start_date < timezone.now():
+            self.add_error('start_date', 'Assignment cannot be backdated.')
 
-            # Check for overlapping assignments
+        if start_date and service:
+            end_date = self.calculate_end_time(start_date, service)
             self.check_overlapping_assignments(start_date, end_date, employee=employee, chair=chair)
 
         return cleaned_data

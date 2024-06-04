@@ -57,8 +57,16 @@
       {% if employee_payments %}
         <div class="payment-form__info">
           <div class="payment-form__info__legend">
-            <div class="payment-form__info__legend__paid"></div>
-            <span>Paid Off</span>
+            <div class="payment-form__info__legend__indicator">
+              <div class="payment-form__info__legend__paid"></div>
+              <span>Paid Off</span>
+            </div>
+            <div class="payment-form__info__legend__help-text">
+              <span>
+                <span style="color: #FF0000;">*</span>
+                Untuk <strong>Partial Payment</strong>, klik pada baris data yang diinginkan, kemudian klik tombol <strong>Pay</strong>
+              </span>
+            </div>
           </div>
           <div class="payment-form__info__fee">
             <span>Total : </span>

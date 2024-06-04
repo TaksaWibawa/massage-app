@@ -1,0 +1,12 @@
+{% extends 'core/confirm_base.html' %}
+{% load static %}
+{% block title %}Pay Confirmation{% endblock %}
+{% block content %}
+  <h2 class="text-center">Pay Confirmation</h2>
+  <p class="text-center">Are you sure you want to pay the payments?</p>
+  <form method="post" class="d-flex justify-content-center gap-3">
+    {% csrf_token %}
+    <input type="submit" value="Pay" class="btn pay-button" />
+    <a href="{% url 'recap' %}?date={{ date }}&employee={{ employee }}" class="btn general-button">Go Back</a>
+  </form>
+{% endblock %}

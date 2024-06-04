@@ -9,6 +9,7 @@ urlpatterns = [
   path('', dashboard.LandingPage, name='landing_page'),
   path('chart', dashboard.ChartPage, name='chart'),
   path('recap', dashboard.RecapPage, name='recap'),
+  path('recap/confirm', dashboard.RecapConfirmPage, name='recap_confirm'),
   path('report', dashboard.ReportPage, name='report'),
 
   # Assignment

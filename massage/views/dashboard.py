@@ -2,12 +2,14 @@ from datetime import datetime
 from django.contrib import messages
 from django.db.models import Sum
 from django.db.models.functions import TruncDay
+from django.http import HttpResponseRedirect
 from django.shortcuts import render
+from django.urls import reverse
 from django.utils import timezone
+from massage.context_processors import chart_context
 from massage.decorator import auth_required, supervisor_required
 from massage.forms import EmployeeFilterForm, MonthFilterForm
 from massage.models import Assignment, Employee, Receipt, EmployeePayment
-from massage.context_processors import chart_context
 
 @auth_required
 def LandingPage(request):
@@ -70,9 +72,9 @@ def ReportPage(request):
     if filter_form.is_valid():
         month = filter_form.cleaned_data.get('month')
 
-    revenue_per_day = Receipt.objects.filter(created_at__year=current_year, created_at__month=month).annotate(date=TruncDay('created_at')).values('date').annotate(revenue=Sum('total')).order_by('date')
+    revenue_per_day = Receipt.objects.filter(assignment__start_date__year=current_year, assignment__start_date__month=month).annotate(date=TruncDay('assignment__start_date')).values('date').annotate(revenue=Sum('total')).order_by('date')
 
-    cost_per_day = EmployeePayment.objects.filter(receipt__created_at__year=current_year, receipt__created_at__month=month).annotate(date=TruncDay('receipt__created_at')).values('date', 'is_paid', 'total_fee').order_by('date')
+    cost_per_day = EmployeePayment.objects.filter(receipt__assignment__start_date__year=current_year, receipt__assignment__start_date__month=month).annotate(date=TruncDay('receipt__assignment__start_date')).values('date', 'is_paid', 'total_fee').order_by('date')
 
     report = []
     for revenue in revenue_per_day:
@@ -92,38 +94,24 @@ def ReportPage(request):
 @auth_required
 def RecapPage(request):
     filter_form = EmployeeFilterForm(request.GET or None, initial={'date': timezone.localtime().date()})
-    selected_date = timezone.localtime().date()
-    employee = None
+    selected_date = filter_form.cleaned_data.get('date') if filter_form.is_valid() else timezone.localtime().date()
+    employee = filter_form.cleaned_data.get('employee') if filter_form.is_valid() else None
 
-    if filter_form.is_valid():
-        selected_date = filter_form.cleaned_data.get('date')
-
-    employees = Employee.objects.filter(role__name__iexact='employee')
-    employee_payments = EmployeePayment.objects.all().order_by('receipt__assignment__employee')
-
-    if selected_date:
-        employee_payments = employee_payments.filter(receipt__assignment__start_date__date=selected_date)
-
-    if filter_form.is_valid():
-        employee = filter_form.cleaned_data.get('employee')
-
-        if employee:
-            employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
+    employee_payments = EmployeePayment.objects.filter(receipt__assignment__start_date__date=selected_date).order_by('receipt__assignment__employee')
+    if employee:
+        employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
 
     if request.method == 'POST':
         selected_payments = request.POST.getlist('payment_id')
         pay_all = 'pay_all' in request.POST
-    
+
         if not selected_payments and not pay_all:
             messages.error(request, 'Please select at least one payment to pay off.')
         else:
-            if selected_payments:
-                EmployeePayment.objects.filter(id__in=selected_payments).update(is_paid=True)
-                messages.success(request, f'{len(selected_payments)} payments have been paid off.')
-            if pay_all:
-                EmployeePayment.objects.filter(is_paid=False).update(is_paid=True)
-                messages.success(request, 'All payments have been paid off.')
-    
+            request.session['selected_payments'] = selected_payments
+            request.session['pay_all'] = pay_all
+            return HttpResponseRedirect(reverse('recap_confirm') + '?date=' + str(selected_date) + '&employee=' + (str(employee.id) if employee else ''))
+
     total_payment = employee_payments.aggregate(total=Sum('total_fee'))['total'] or 0
 
     context = {
@@ -131,8 +119,34 @@ def RecapPage(request):
         'date': selected_date,
         'employee_id': employee.id if employee else None,
         'employee_payments': employee_payments,
-        'employees': employees,
+        'employees': Employee.objects.filter(role__name__iexact='employee'),
         'total_payment': total_payment,
     }
 
     return render(request, 'dashboard/recap.html', context)
+
+def RecapConfirmPage(request):
+    date = request.GET.get('date')
+    employee = request.GET.get('employee')
+    employee_payments = EmployeePayment.objects.filter(receipt__assignment__start_date__date=date)
+
+    if request.method == 'POST':
+        selected_payments = request.session.get('selected_payments', [])
+        pay_all = request.session.get('pay_all', False)
+
+        if selected_payments:
+            employee_payments.filter(id__in=selected_payments).update(is_paid=True)
+            messages.success(request, f'{len(selected_payments)} payments have been paid off.')
+
+        if pay_all:
+            employee_payments.update(is_paid=True)
+            messages.success(request, 'All payments have been paid off.')
+
+        return HttpResponseRedirect(reverse('recap') + '?date=' + date + '&employee=' + (employee if employee else ''))
+    
+    context = {
+        'date': date,
+        'employee': employee,
+    }
+
+    return render(request, 'dashboard/recap_confirm.html', context)

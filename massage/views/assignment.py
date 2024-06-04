@@ -18,7 +18,7 @@ def EditAssignmentPage(request, id):
             messages.error(request, 'Failed to update assignment.')
     else:
         form = AssignmentForm(instance=assignment)
-    return render(request, 'dashboard/assignment_edit.html', {'form': form})
+    return render(request, 'assignments/assignment_edit.html', {'form': form})
 
 
 @supervisor_required(allowed_roles=['supervisor'])
@@ -29,7 +29,7 @@ def DeleteAssignmentPage(request, id):
         messages.success(request, 'Assignment has been deleted successfully.')
         return redirect('chart')
 
-    return render(request, 'dashboard/assignment_delete.html', {'assignment': assignment})
+    return render(request, 'assignments/assignment_delete.html', {'assignment': assignment})
 
 @supervisor_required(allowed_roles=['supervisor'])
 def NewAssignmentPage(request):
@@ -43,4 +43,4 @@ def NewAssignmentPage(request):
             messages.error(request, 'Failed to create assignment.')
     else:
         form = AssignmentForm()
-    return render(request, 'dashboard/assignment_new.html', {'form': form})
+    return render(request, 'assignments/assignment_new.html', {'form': form})
