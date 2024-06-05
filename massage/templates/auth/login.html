@@ -7,28 +7,17 @@
   </div>
   <form method="post" class="form-wrapper">
     {% csrf_token %}
-    <div class="input-wrapper">
-      <label for="username">Username</label>
-      <input type="text"
-             name="username"
-             id="username"
-             class="form-control"
-             required
-             autofocus />
-    </div>
-    <div class="input-wrapper">
-      <label for="password">Password</label>
-      <input type="password"
-             name="password"
-             id="password"
-             class="form-control"
-             required />
-    </div>
-    <button type="submit" class="btn submit-button">Login</button>
-    {% if form.non_field_errors %}
-      <div class="alert alert-danger text-center">
-        {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+    {% for field in form %}
+      <div class="input-wrapper">
+        <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+        {{ field }}
+        {% if field.errors %}
+        {% for error in field.errors %}
+            <p class="text-danger small">{{ error }}</p>
+        {% endfor %}
+        {% endif %}
       </div>
-    {% endif %}
+    {% endfor %}
+    <button type="submit" class="btn submit-button">Login</button>
   </form>
 {% endblock content %}

@@ -27,7 +27,7 @@ def supervisor_required(allowed_roles=[]):
                 return redirect('login')
             elif request.user.is_superuser:
                 return view_func(request, *args, **kwargs)
-            elif hasattr(request.user, 'employee') and hasattr(request.user.employee, 'role') and request.user.employee.role.name in allowed_roles:
+            elif any(request.user.groups.filter(name__iexact=role).exists() for role in allowed_roles):
                 return view_func(request, *args, **kwargs)
             else:
                 return redirect('/')

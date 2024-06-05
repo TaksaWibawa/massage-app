@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib import messages
 from massage.forms import LoginForm
 from massage.decorator import protected
@@ -17,3 +17,10 @@ def LoginPage(request):
     else:
         form = LoginForm()
     return render(request, 'auth/login.html', {'form': form})
+
+def Logout(request):
+    if request.user.is_authenticated:
+        request.session.flush()
+        logout(request)
+        messages.success(request, 'Logout successful.')
+    return redirect('login')

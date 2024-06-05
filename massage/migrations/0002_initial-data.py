@@ -3,11 +3,21 @@
 from django.db import migrations
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
+from django.contrib.auth.models import Group
+
+def remove_all_users(apps, schema_editor):
+    User = get_user_model()
+    User.objects.all().delete()
 
 def create_superuser(apps, schema_editor):
     User = get_user_model()
     if not User.objects.filter(username='admin').exists():
         User.objects.create(username='admin', password=make_password('admin123'), is_superuser=True, is_staff=True)
+    
+    user = User.objects.get(username='admin')
+    group, _created = Group.objects.get_or_create(name='Supervisor')
+    group.user_set.add(user)
+    
 
 def remove_superuser(apps, schema_editor):
     User = get_user_model()
@@ -46,6 +56,11 @@ def create_employee(apps, schema_editor):
         user = User.objects.create_user('employee', 'employee@example.com', 'employee123')
         role = Role.objects.get(name='employee')
         Employee.objects.create(user_id=user.id, role=role)
+    
+    user = User.objects.get(username='employee')
+    group, _created = Group.objects.get_or_create(name__iexact='Employee')
+    group.user_set.add(user)
+    
 
 def remove_employee(apps, schema_editor):
     User = get_user_model()
@@ -60,6 +75,7 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
+        migrations.RunPython(remove_all_users, remove_all_users),
         migrations.RunPython(create_superuser, remove_superuser),
         migrations.RunPython(add_global_settings, remove_global_settings),
         migrations.RunPython(add_roles, remove_roles),

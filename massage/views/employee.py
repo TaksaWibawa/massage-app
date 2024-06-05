@@ -1,8 +1,9 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from massage.forms import CreateUserForm, EmployeeForm, ChangePasswordForm
 from massage.models import Employee
+from massage.forms import CreateUserForm, EmployeeForm, ChangePasswordForm
 from massage.decorator import supervisor_required
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.models import Group
+from django.contrib import messages
 
 @supervisor_required(allowed_roles=['supervisor'])
 def EmployeeListPage(request):
@@ -20,6 +21,10 @@ def EmployeeNewPage(request):
             employee = employee_form.save(commit=False)
             employee.user = user
             employee.save()
+
+            group, _created = Group.objects.get_or_create(name='Employee')
+            group.user_set.add(user)
+
             messages.success(request, 'Employee has been created successfully.')
             return redirect('employee_list')
         else:

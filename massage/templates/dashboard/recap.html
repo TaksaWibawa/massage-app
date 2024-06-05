@@ -40,14 +40,14 @@
               <th class="d-none">Paid</th>
             </tr>
             {% for payment in employee_payments.list %}
-              <tr class="{% if payment.is_paid %}paid{% else %}unpaid{% endif %}">
+              <tr class="{% if payment.is_paid %}paid{% else %}unpaid{% endif %}" {% if is_employee %}data-employee="true"{% endif %}>
                 <td>{{ payment.receipt.assignment.start_date|date:"d/m/Y" }}</td>
                 <td>{{ payment.receipt.services.all|join:", " }}</td>
                 <td>{{ payment.receipt.total|currency_format_dot }}</td>
                 <td>{{ payment.fee_percentage|percentage }}</td>
                 <td>{{ payment.total_fee|currency_format_dot }}</td>
                 <td class="d-none">
-                  <input type="checkbox" name="payment_id" value="{{ payment.id }}" {% if payment.is_paid %}checked disabled{% endif %}>
+                  <input type="checkbox" name="payment_id" value="{{ payment.id }}" {% if payment.is_paid or is_employee %}disabled{% endif %}>
                 </td>
               </tr>
             {% endfor %}
@@ -62,10 +62,12 @@
               <span>Paid Off</span>
             </div>
             <div class="payment-form__info__legend__help-text">
-              <span>
-                <span style="color: #FF0000;">*</span>
-                Untuk <strong>Partial Payment</strong>, klik pada baris data yang diinginkan, kemudian klik tombol <strong>Pay</strong>
-              </span>
+              {% if not is_employee %}
+                <span>
+                  <span style="color: #FF0000;">*</span>
+                  Untuk <strong>Partial Payment</strong>, klik pada baris data yang diinginkan, kemudian klik tombol <strong>Pay</strong>
+                </span>
+              {% endif %}
             </div>
           </div>
           <div class="payment-form__info__fee">
@@ -76,7 +78,7 @@
       {% endif %}
       <input id="pay-selected" type="submit" value="pay_selected" class="d-none">
     </form>
-    {% if employee_payments %}
+    {% if employee_payments and not is_employee %}
       <div class="payment-actions">
         <button id="mock-pay-selected" class="btn submit-button">Pay</button>
         <form method="POST">
@@ -85,7 +87,8 @@
           <button type="submit" class="btn active">Pay All</button>
         </form>
       </div>
-    {% else %}
+    {% endif %}
+    {% if not employee_payments %}
       <div class="text-center">
         <p>No payment available</p>
       </div>
@@ -94,21 +97,23 @@
   <script>
     let rows = document.querySelectorAll('.payment-form__table tr');
     rows.forEach(row => {
-      row.addEventListener('click', function() {
-        let checkbox = this.querySelector('input[type="checkbox"]');
-  
-        if (checkbox && !checkbox.disabled) {
-          this.classList.toggle('selected');
-  
-          if (this.classList.contains('selected')) {
-            this.style.backgroundColor = '#C8C8C8';
-          } else {
-            this.style.backgroundColor = '';
+      if (!row.dataset.employee) {
+        row.addEventListener('click', function() {
+          let checkbox = this.querySelector('input[type="checkbox"]');
+    
+          if (checkbox && !checkbox.disabled) {
+            this.classList.toggle('selected');
+    
+            if (this.classList.contains('selected')) {
+              this.style.backgroundColor = '#C8C8C8';
+            } else {
+              this.style.backgroundColor = '';
+            }
+    
+            checkbox.checked = !checkbox.checked;
           }
-  
-          checkbox.checked = !checkbox.checked;
-        }
-      });
+        });
+      }
     });
   
     let mockPaySelected = document.getElementById('mock-pay-selected');

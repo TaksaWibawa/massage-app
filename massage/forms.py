@@ -18,6 +18,11 @@ class UserAdminForm(UserCreationForm):
 
 
 class LoginForm(AuthenticationForm):
+    username = forms.CharField(required=True, widget=forms.TextInput(
+        attrs={'class': 'form-control', 'id': 'username'}))
+    password = forms.CharField(required=True, widget=forms.PasswordInput(
+        attrs={'class': 'form-control', 'id': 'password'}))
+
     class Meta:
         model = User
         fields = ['username', 'password']
@@ -27,7 +32,8 @@ class LoginForm(AuthenticationForm):
         password = self.cleaned_data.get('password')
         user = authenticate(username=username, password=password)
         if user is None:
-            raise ValidationError("Invalid username or password")
+            self.add_error('username', 'Invalid username or password')
+            self.add_error('password', 'Invalid username or password')
         self.user = user
         return self.cleaned_data
 
@@ -305,7 +311,13 @@ class EmployeeFilterForm(forms.Form):
         attrs={'class': 'form-control', 'type': 'date', 'id': 'date'}))
 
     def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
         super(EmployeeFilterForm, self).__init__(*args, **kwargs)
+
+        if request and request.user.groups.filter(name__iexact='employee').exists():
+            self.fields['employee'].queryset = Employee.objects.filter(user=request.user)
+        else:
+            self.fields['employee'].queryset = Employee.objects.filter(is_active=True)
 
     
 class RecapPaySelectedForm(forms.Form):

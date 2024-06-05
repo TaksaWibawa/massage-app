@@ -835,3 +835,18 @@ p {
   gap: 24px;
   margin-top: 24px;
 }
+
+.logout{
+  position: absolute;
+  bottom: 24px;
+}
+
+.logout a {
+  color: white;
+  text-decoration: none;
+}
+
+.logout a:hover {
+  color: #d63031;
+  text-decoration: underline;
+}

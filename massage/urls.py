@@ -4,6 +4,7 @@ from .views import auth, dashboard, employee, assignment, service, receipt
 urlpatterns = [
   # Auth
   path('login', auth.LoginPage, name='login'),
+  path('logout', auth.Logout, name='logout'),
 
   # Dashboard
   path('', dashboard.LandingPage, name='landing_page'),

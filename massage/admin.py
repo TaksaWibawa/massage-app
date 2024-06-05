@@ -1,4 +1,4 @@
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.contrib.auth.admin import UserAdmin as DefaultUserAdmin
 from django.contrib import admin
 from .models import Role, Employee, Service, Assignment, Receipt, ReceiptService, GlobalSettings, EmployeePayment
@@ -50,6 +50,9 @@ class UserAdmin(DefaultUserAdmin):
         obj.is_staff = role.id == 1 or role.name == 'supervisor'
         obj.save()
         Employee.objects.get_or_create(user=obj, defaults={'role': role})
+
+        group, created = Group.objects.get_or_create(name__iexact=role.name)
+        group.user_set.add(obj)
 
 class GlobalSettingsAdmin(admin.ModelAdmin):
     list_display = ('name', 'type', 'display_value')

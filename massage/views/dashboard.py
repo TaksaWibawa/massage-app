@@ -93,15 +93,19 @@ def ReportPage(request):
 
 @auth_required
 def RecapPage(request):
-    filter_form = EmployeeFilterForm(request.GET or None, initial={'date': timezone.localtime().date()})
+    is_employee = request.user.groups.filter(name__iexact='employee').exists()
+    filter_form = EmployeeFilterForm(request.GET or None, request=request, initial={'date': timezone.localtime().date()})
     selected_date = filter_form.cleaned_data.get('date') if filter_form.is_valid() else timezone.localtime().date()
-    employee = filter_form.cleaned_data.get('employee') if filter_form.is_valid() else None
+    employee = filter_form.cleaned_data.get('employee') if filter_form.is_valid() and not is_employee else None
+
+    if is_employee:
+        employee = Employee.objects.get(user=request.user)
 
     employee_payments = EmployeePayment.objects.filter(receipt__assignment__start_date__date=selected_date).order_by('receipt__assignment__employee')
     if employee:
         employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
 
-    if request.method == 'POST':
+    if request.method == 'POST' and not is_employee:
         selected_payments = request.POST.getlist('payment_id')
         pay_all = 'pay_all' in request.POST
 
@@ -121,6 +125,7 @@ def RecapPage(request):
         'employee_payments': employee_payments,
         'employees': Employee.objects.filter(role__name__iexact='employee'),
         'total_payment': total_payment,
+        'is_employee': is_employee,
     }
 
     return render(request, 'dashboard/recap.html', context)

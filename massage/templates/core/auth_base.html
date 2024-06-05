@@ -16,8 +16,26 @@
   <body>
     <div class="container-fluid form-auth-wrapper">
       <main class="form-signin">
-        {% block content %}{% endblock %}
+        {% block content %}
+        {% endblock %}
       </main>
+      <div class="toast-container">
+        {% for message in messages %}
+          <div class="toast {{ message.tags }}"
+               role="alert"
+               aria-live="assertive"
+               aria-atomic="true"
+               data-bs-autohide="true">
+            <div class="toast-body position-relative">
+              {{ message }}
+              <button type="button"
+                      class="btn-close position-absolute top-0 end-0 m-2"
+                      data-bs-dismiss="toast"
+                      aria-label="Close"></button>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     </div>
     {% block scripts %}
       <script src="{% static 'massage/js/scripts.js' %}"></script>

@@ -1,4 +1,3 @@
-from .models import GlobalSettings
 from .utils import get_global_setting
 
 def nav_menus(request):
@@ -25,6 +24,17 @@ def nav_menus(request):
             ]
         }
     ]
+
+    if request.user.groups.filter(name__iexact='employee').exists():
+        MENU_ITEMS = [
+            {
+                "Dashboard": [
+                    {"name": "Home", "url": "landing_page"},
+                    {"name": "Recap", "url": "recap"},
+                ]
+            }
+        ]
+
     return {'MENU_ITEMS': MENU_ITEMS}
 
 

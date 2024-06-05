@@ -54,7 +54,7 @@
                   data-bs-dismiss="offcanvas"
                   aria-label="Close"></button>
         </div>
-        <nav class="offcanvas-body">
+        <nav class="offcanvas-body position-relative">
           <ul class="navbar-nav">
             {% for menu in MENU_ITEMS %}
               {% for key, value in menu.items %}
@@ -74,6 +74,9 @@
               {% endfor %}
             {% endfor %}
           </ul>
+          <div class="logout">
+            <a href="{% url 'logout' %}">Logout</a>
+          </div>
         </nav>
       </aside>
       <div class="toast-container">
