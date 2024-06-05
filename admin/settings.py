@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'bootstrap5',
     'fontawesomefree',
     'colorfield',
+    'django_xhtml2pdf',
 
     # Default
     'django.contrib.admin',

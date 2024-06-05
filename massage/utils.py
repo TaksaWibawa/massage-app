@@ -1,6 +1,5 @@
-from xhtml2pdf import pisa
-from io import BytesIO
-from django.template.loader import get_template
+from django.http import HttpResponse
+from django_xhtml2pdf.utils import generate_pdf as generate_pdf_xhtml2pdf
 from .models import GlobalSettings, ReceiptService, Service, Receipt
 
 
@@ -16,16 +15,12 @@ def get_global_setting(name):
         return value
     return None
 
-
-def render_to_pdf(template_src, context_dict={}):
-    template = get_template(template_src)
-    html = template.render(context_dict)
-    result = BytesIO()
-    pdf = pisa.pisaDocument(BytesIO(html.encode("ISO-8859-1")), result)
-    if not pdf.err:
-        return result.getvalue()
+def render_to_pdf(template_src, context_dict={}, response=None):
+    pdf_content = generate_pdf_xhtml2pdf(template_name=template_src, context=context_dict, file_object=response)
+    if pdf_content:
+        return pdf_content
     else:
-        print(f"PDF generation error: {pdf.err}")
+        print("PDF generation error")
         return None
 
 
@@ -57,8 +52,13 @@ def generate_pdf(request, invoice_number, user, assignment):
         'total': total_price,
     }
 
-    pdf_bytes = render_to_pdf('dashboard/download_receipt.html', data)
-    if pdf_bytes:
-        return pdf_bytes
-    else:
-        raise Exception('Failed to generate PDF')
+    try:
+        response = HttpResponse(content_type='application/pdf')
+        pdf_bytes = render_to_pdf('dashboard/download_receipt.html', data, response)
+        if pdf_bytes:
+            return pdf_bytes
+        else:
+            raise Exception('Failed to generate PDF')
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+        return None
