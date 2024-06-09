@@ -9,8 +9,6 @@ urlpatterns = [
   # Dashboard
   path('', dashboard.LandingPage, name='landing_page'),
   path('chart', dashboard.ChartPage, name='chart'),
-  path('recap', dashboard.RecapPage, name='recap'),
-  path('recap/confirm', dashboard.RecapConfirmPage, name='recap_confirm'),
   path('report', dashboard.ReportPage, name='report'),
 
   # Assignment
@@ -32,4 +30,9 @@ urlpatterns = [
   # Receipt
   path('assignment/pay/<str:id>', receipt.ReceiptPage, name='receipt'),
   path('assignment/pay/<str:id>/download', receipt.finalize_receipt, name='download_receipt'),
+
+  # Recap
+  path('recap', dashboard.RecapPage, name='recap'),
+  path('recap/history', dashboard.RecapHistoryPage, name='recap_history'),
+  path('recap/confirm', dashboard.RecapConfirmPage, name='recap_confirm'),
 ]

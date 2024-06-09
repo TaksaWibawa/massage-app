@@ -10,6 +10,7 @@ from massage.context_processors import chart_context
 from massage.decorator import auth_required, supervisor_required
 from massage.forms import EmployeeFilterForm, MonthFilterForm
 from massage.models import Assignment, Employee, Receipt, EmployeePayment
+from massage.services.recap import generate_recap_pdf
 
 @auth_required
 def LandingPage(request):
@@ -101,54 +102,94 @@ def RecapPage(request):
     if is_employee:
         employee = Employee.objects.get(user=request.user)
 
-    employee_payments = EmployeePayment.objects.filter(receipt__assignment__start_date__date=selected_date).order_by('receipt__assignment__employee')
+    employee_payments = EmployeePayment.objects.filter(
+        receipt__assignment__start_date__date__lte=selected_date,
+        is_paid=False
+    ).order_by('receipt__assignment__employee')
     if employee:
         employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
 
     if request.method == 'POST' and not is_employee:
-        selected_payments = request.POST.getlist('payment_id')
-        pay_all = 'pay_all' in request.POST
-
-        if not selected_payments and not pay_all:
-            messages.error(request, 'Please select at least one payment to pay off.')
-        else:
-            request.session['selected_payments'] = selected_payments
-            request.session['pay_all'] = pay_all
-            return HttpResponseRedirect(reverse('recap_confirm') + '?date=' + str(selected_date) + '&employee=' + (str(employee.id) if employee else ''))
+        return HttpResponseRedirect(reverse('recap_confirm') + '?date=' + str(selected_date) + '&employee=' + (str(employee.id) if employee else ''))
 
     total_payment = employee_payments.aggregate(total=Sum('total_fee'))['total'] or 0
 
     context = {
-        'filter_form': filter_form,
         'date': selected_date,
         'employee_id': employee.id if employee else None,
         'employee_payments': employee_payments,
         'employees': Employee.objects.filter(role__name__iexact='employee'),
-        'total_payment': total_payment,
+        'filter_form': filter_form,
         'is_employee': is_employee,
+        'total_payment': total_payment,
     }
 
     return render(request, 'dashboard/recap.html', context)
 
+@auth_required
+def RecapHistoryPage(request):
+    is_employee = request.user.groups.filter(name__iexact='employee').exists()
+    filter_form = EmployeeFilterForm(request.GET or None, request=request, initial={'date': timezone.localtime().date()})
+    selected_date = filter_form.cleaned_data.get('date') if filter_form.is_valid() else timezone.localtime().date()
+    employee = filter_form.cleaned_data.get('employee') if filter_form.is_valid() and not is_employee else None
+
+    if is_employee:
+        employee = Employee.objects.get(user=request.user)
+
+    employee_payments = EmployeePayment.objects.filter(
+        receipt__assignment__start_date__date__lte=selected_date,
+    ).order_by('receipt__assignment__employee')
+    if employee:
+        employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
+
+    if request.method == 'POST':
+        response = generate_recap_pdf(selected_date, employee_payments)
+
+        if response.status_code == 200:
+            messages.success(request, 'Recap created')
+        else:
+            messages.error(request, 'Failed to download recap')
+        
+        return response
+
+    total_payment = employee_payments.aggregate(total=Sum('total_fee'))['total'] or 0
+
+    context = {
+        'date': selected_date,
+        'employee_id': employee.id if employee else None,
+        'employee_payments': employee_payments,
+        'employees': Employee.objects.filter(role__name__iexact='employee'),
+        'filter_form': filter_form,
+        'is_employee': is_employee,
+        'total_payment': total_payment,
+    }
+
+    return render(request, 'dashboard/recap_history.html', context)
+
 def RecapConfirmPage(request):
     date = request.GET.get('date')
     employee = request.GET.get('employee')
-    employee_payments = EmployeePayment.objects.filter(receipt__assignment__start_date__date=date)
+    employee_payments = EmployeePayment.objects.filter(
+        receipt__assignment__start_date__date__lte=date,
+        is_paid=False
+    ).order_by('receipt__assignment__employee')
 
     if request.method == 'POST':
-        selected_payments = request.session.get('selected_payments', [])
-        pay_all = request.session.get('pay_all', False)
+        employee_payments.update(is_paid=True)
+        employee_payments = EmployeePayment.objects.filter(
+                receipt__assignment__start_date__date__lte=date,
+                is_paid=True
+            ).order_by('receipt__assignment__employee')
+        
+        response = generate_recap_pdf(date, employee_payments)
 
-        if selected_payments:
-            employee_payments.filter(id__in=selected_payments).update(is_paid=True)
-            messages.success(request, f'{len(selected_payments)} payments have been paid off.')
+        if response.status_code == 200:
+            messages.success(request, 'Recap created')
+        else:
+            messages.error(request, 'Failed to download recap')
+        
+        return response
 
-        if pay_all:
-            employee_payments.update(is_paid=True)
-            messages.success(request, 'All payments have been paid off.')
-
-        return HttpResponseRedirect(reverse('recap') + '?date=' + date + '&employee=' + (employee if employee else ''))
-    
     context = {
         'date': date,
         'employee': employee,

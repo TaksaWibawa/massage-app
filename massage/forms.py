@@ -201,7 +201,7 @@ class AssignmentForm(forms.ModelForm):
     
     service = forms.ModelChoiceField(queryset=Service.objects.filter(is_active=True), empty_label='', initial=None, required=True,
                                      widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'service'}))
-    employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True), empty_label='', initial=None, required=True,
+    employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True, role__name__iexact='employee'), empty_label='', initial=None, required=True,
                                       widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
     chair = forms.ChoiceField(
         required=True,
@@ -262,7 +262,7 @@ class AssignmentForm(forms.ModelForm):
         chair = cleaned_data.get('chair')
         employee = cleaned_data.get('employee')
 
-        if start_date < timezone.now():
+        if start_date.date() < timezone.localdate():
             self.add_error('start_date', 'Assignment cannot be backdated.')
 
         if start_date and service:
@@ -305,7 +305,7 @@ class MonthFilterForm(forms.Form):
         super(MonthFilterForm, self).__init__(*args, **kwargs)
 
 class EmployeeFilterForm(forms.Form):
-    employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True), empty_label='All', required=False,
+    employee = forms.ModelChoiceField(queryset=None, required=False,
                                       widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
     date = forms.DateField(required=False, widget=forms.DateInput(
         attrs={'class': 'form-control', 'type': 'date', 'id': 'date'}))
@@ -315,9 +315,9 @@ class EmployeeFilterForm(forms.Form):
         super(EmployeeFilterForm, self).__init__(*args, **kwargs)
 
         if request and request.user.groups.filter(name__iexact='employee').exists():
-            self.fields['employee'].queryset = Employee.objects.filter(user=request.user)
+            self.fields['employee'].queryset = Employee.objects.filter(user=request.user, is_active=True, role__name__iexact='employee')
         else:
-            self.fields['employee'].queryset = Employee.objects.filter(is_active=True)
+            self.fields['employee'].queryset = Employee.objects.filter(is_active=True, role__name__iexact='employee')
 
     
 class RecapPaySelectedForm(forms.Form):

@@ -4,9 +4,44 @@
 {% block content %}
   <h2 class="text-center">Pay Confirmation</h2>
   <p class="text-center">Are you sure you want to pay the payments?</p>
-  <form method="post" class="d-flex justify-content-center gap-3">
+  <form id="pay-form" method="post" class="d-flex justify-content-center gap-3">
     {% csrf_token %}
-    <input type="submit" value="Pay" class="btn pay-button" />
+    <input type="submit" value="Pay" class="btn pay-button" id="pay-button">
     <a href="{% url 'recap' %}?date={{ date }}&employee={{ employee }}" class="btn general-button">Go Back</a>
   </form>
+{% endblock %}
+{% block scripts %}
+  <script>
+    document.getElementById('pay-form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      const formData = new FormData(this);
+    
+      fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      })
+      .then(response => {
+        if (response.ok) {
+          return response.blob();
+        } else {
+          throw new Error('Failed to generate recap');
+        }
+      })
+      .then(blob => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `Recap-{{ date }}.pdf`
+        link.click();
+
+        window.location.href = "{% url 'Recap' %}?date={{ date|date:'Y-m-d' }}&employee={{ employee }}";
+      })
+      .catch(error => {
+        console.error('Error:', error);
+      });
+    });
+  </script>
 {% endblock %}

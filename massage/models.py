@@ -137,6 +137,7 @@ class ReceiptService(Auditable):
     receipt = models.ForeignKey(Receipt, on_delete=models.CASCADE)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    is_additional = models.BooleanField(default=False, verbose_name='Additional Service')
 
     def save(self, *args, **kwargs):
         self.price = self.service.price

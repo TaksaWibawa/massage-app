@@ -7,6 +7,7 @@ def nav_menus(request):
                 {"name": "Home", "url": "landing_page"},
                 {"name": "Chart", "url": "chart"},
                 {"name": "Recap", "url": "recap"},
+                {"name": "Recap History", "url": "recap_history"},
                 {"name": "Report", "url": "report"},
                 {"name": "New Assignment", "url": "new_assignment"}
             ]

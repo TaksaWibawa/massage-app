@@ -1,0 +1,97 @@
+{% load templatetags %}
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Recap</title>
+    <style>
+      @page {
+        size: A4;
+        margin: 0.5cm;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        font-size: 10px;
+      }
+
+      h1 {
+        margin: 0;
+        padding: 0;
+        font-size: 28px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th, td {
+        border: 1px solid #ddd;
+        padding: 4px;
+        page-break-inside: avoid;
+        white-space: nowrap;
+      }
+
+      th {
+        font-size: 12px;
+      }
+
+      td {
+        font-size: 10px;
+        word-wrap: break-word;
+      }
+
+      .print-recap__header {
+        text-align: center;
+      }
+
+      .print-recap__header h1,
+      p {
+        margin: 0;
+        padding: 0;
+      }
+
+      .print-recap__header p {
+        font-size: 20px;
+      }
+
+      .employee-box {
+        margin-bottom: 20px;
+      }
+
+      .employee-box h2 {
+        font-size: 18px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    {% regroup employee_payments by receipt.assignment.employee.id as payments_by_employee %}
+    {% for employee in payments_by_employee %}
+    <div class="employee-box">
+      <h2>{{ employee.list.0.receipt.assignment.employee.name }}</h2>
+      <table class="print-recap__info">
+        <tr>
+          <th>Date</th>
+          <th>Service</th>
+          <th>Total Price</th>
+          <th>Employee Fee ({{ employee.list.0.fee_percentage|percentage }})</th>
+        </tr>
+        {% for payment in employee.list|dictsort:"receipt.assignment.start_date" %}
+        <tr>
+          <td width="20%" style="text-align: center">{{ payment.receipt.assignment.start_date|date:"j F Y" }}</td>
+          <td width="40%">{{ payment.receipt.services.all|join:", " }}</td>
+          <td width="20%" style="text-align: center">Rp. {{ payment.receipt.total|currency_format_dot }}</td>
+          <td width="20%" style="text-align: center">Rp. {{ payment.total_fee|currency_format_dot }}</td>
+        </tr>
+        {% endfor %}
+        <tr>
+          <td colspan="3" style="text-align: right"><strong>Total Payment</strong></td>
+          <td style="text-align: center"><strong>Rp. {{ employee.list|sum_list:'total_fee'|currency_format_dot }}</strong></td>
+        </tr>
+      </table>
+    </div>
+    <hr />
+    {% endfor %}
+  </body>
+</html>

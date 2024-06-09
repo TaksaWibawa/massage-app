@@ -4,6 +4,10 @@ from decimal import Decimal
 register = template.Library()
 
 @register.filter
+def sum_list(value, arg):
+    return sum(getattr(item, arg) for item in value)
+
+@register.filter
 def currency(value):
     return f'{round(value/1000)}k' if value >= 1000 else value
 

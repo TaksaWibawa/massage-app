@@ -37,21 +37,17 @@
       <hr class="receipt-line">
       <div class="receipt-additional">
         {% if receipt and assignment.is_done %}
-            <p class="receipt-additional__title">Additional Treatment : </p>
-            {% with services=receipt.services.all %}
-                {% if services|length > 1 %}
-                    {% for additional_service in services %}
-                        {% if not forloop.first %}
-                            <div class="receipt-services">
-                                <p>- {{ additional_service.name }}</p>
-                                <p>{{ additional_service.price|currency_format_dot }}</p>
-                            </div>
-                        {% endif %}
-                    {% endfor %}
-                {% else %}
-                    <p class="receipt-additional__empty">- No Additional Treatment</p>
-                {% endif %}
-            {% endwith %}
+          <p class="receipt-additional__title">Additional Treatment : </p>
+          {% if additional_services|length > 0 %}
+            {% for receipt_service in additional_services %}
+                <div class="receipt-services">
+                    <p>- {{ receipt_service.service.name }}</p>
+                    <p>{{ receipt_service.service.price|currency_format_dot }}</p>
+                </div>
+            {% endfor %}
+          {% else %}
+              <p class="receipt-additional__empty">- No Additional Treatment</p>
+          {% endif %}
         {% else %}
             <span class="receipt-additional__label">+Additional Treatment</span>
             {% for form in formset %}
@@ -100,76 +96,50 @@
     </form>
   </section>
   <script>
-      document.getElementById('print-receipt').addEventListener('click', function() {
-        const form = document.getElementById('receipt-form');
-        const formData = new FormData(form);
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-CSRFToken': '{{ csrf_token }}'
-            }
-        })
-
-        .then(response => {
-            if (response.ok) {
-                return response.blob();
-            } else {
-                throw new Error('Failed to generate receipt');
-            }
-        })
-        .then(blob => {      
-          const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-          const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      
-          if (isMobile && isSafari) {
-              const reader = new FileReader();
-              reader.onloadend = function() {
-                  const base64data = reader.result;
-                  const byteCharacters = atob(base64data.split(',')[1]);
-                  const byteNumbers = new Array(byteCharacters.length);
-                  for (let i = 0; i < byteCharacters.length; i++) {
-                      byteNumbers[i] = byteCharacters.charCodeAt(i);
-                  }
-                  const byteArray = new Uint8Array(byteNumbers);
-                  const blob = new Blob([byteArray], { type: 'application/pdf' });
-                  const blobUrl = window.URL.createObjectURL(blob);
-                  const link = document.createElement('a');
-                  link.href = blobUrl;
-                  link.download = `Invoice-${formData.get('receipt_id')}.pdf`;
-                  link.target = '_blank';
-                  link.click();
-              };
-              reader.readAsDataURL(blob);
-          } else {
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `Invoice-${formData.get('receipt_id')}.pdf`;
-              a.click();
-              window.URL.revokeObjectURL(url);
+    document.getElementById('print-receipt').addEventListener('click', function() {
+      const form = document.getElementById('receipt-form');
+      const formData = new FormData(form);
+  
+      fetch(form.action, {
+          method: 'POST',
+          body: formData,
+          headers: {
+              'X-CSRFToken': '{{ csrf_token }}'
           }
-
-            return fetch("{% url 'download_receipt' assignment.id %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-            });
-        })
-        .then(response => {
-            if (response.ok) {
-                window.location.href = "{% url 'chart' %}";
-            } else {
-                throw new Error('Failed to download receipt');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+      })
+      .then(response => {
+          if (response.ok) {
+              return response.blob();
+          } else {
+              throw new Error('Failed to generate receipt');
+          }
+      })
+      .then(blob => {
+          const url = URL.createObjectURL(blob);
+          const link = document.createElement('a');
+          link.href = url;
+          link.target = '_blank';
+          link.click();
+  
+          return fetch("{% url 'download_receipt' assignment.id %}", {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'X-CSRFToken': '{{ csrf_token }}'
+              },
+          });
+      })
+      .then(response => {
+          if (response.ok) {
+              window.location.href = "{% url 'chart' %}";
+          } else {
+              throw new Error('Failed to download receipt');
+          }
+      })
+      .catch(error => {
+          console.error('Error:', error);
       });
+    });
 
       let count = {{ formset.total_form_count }};
       const maxFields = {{ formset.max_num }};
