@@ -43,7 +43,6 @@ def generate_pdf_response(request, invoice_number, assignment, additional_servic
         'total': total_price,
     }
 
-    print(data)
     pdf_bytes = generate_pdf('downloads/download_receipt.html', data)
     response = HttpResponse(pdf_bytes, content_type='application/pdf')
     response['Content-Disposition'] = f'attachment; filename=Invoice_{invoice_number}.pdf'
