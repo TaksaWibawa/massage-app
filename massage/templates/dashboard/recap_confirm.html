@@ -37,7 +37,7 @@
         link.download = `Recap-{{ date }}.pdf`
         link.click();
 
-        window.location.href = "{% url 'Recap' %}?date={{ date|date:'Y-m-d' }}&employee={{ employee }}";
+        window.location.href = "{% url 'recap' %}?date={{ date }}&employee={{ employee }}";
       })
       .catch(error => {
         console.error('Error:', error);

@@ -14,9 +14,10 @@ def generate_recap_pdf(date, employee_payments):
 
         pdf_bytes = generate_pdf('downloads/download_recap.html', data)
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
-        response['Content-Disposition'] = f'attachment; filename=Recap_{date.strftime("%d-%m-%Y")}.pdf'
+        response['Content-Disposition'] = f'attachment; filename=Recap_{date}.pdf'
 
         return response
 
     except Exception as e:
+        print(e)
         return JsonResponse({'error': str(e)}, status=500)

@@ -99,6 +99,9 @@ def RecapPage(request):
     selected_date = filter_form.cleaned_data.get('date') if filter_form.is_valid() else timezone.localtime().date()
     employee = filter_form.cleaned_data.get('employee') if filter_form.is_valid() and not is_employee else None
 
+    if selected_date is None:
+        selected_date = timezone.localtime().date()
+
     if is_employee:
         employee = Employee.objects.get(user=request.user)
 
@@ -106,6 +109,7 @@ def RecapPage(request):
         receipt__assignment__start_date__date__lte=selected_date,
         is_paid=False
     ).order_by('receipt__assignment__employee')
+
     if employee:
         employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
 
@@ -189,7 +193,7 @@ def RecapConfirmPage(request):
             messages.error(request, 'Failed to download recap')
         
         return response
-
+    
     context = {
         'date': date,
         'employee': employee,
