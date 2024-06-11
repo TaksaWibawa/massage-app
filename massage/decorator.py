@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+from django.contrib import messages
 from functools import wraps
 
 def auth_required(function):
@@ -32,4 +33,16 @@ def supervisor_required(allowed_roles=[]):
             else:
                 return redirect('/')
         return _wrapped_view
+    return decorator
+
+def fetch_required(allowed_methods=['GET', 'POST']):
+    def decorator(f):
+        def wrap(request, *args, **kwargs):
+            if not (request.method in allowed_methods and request.headers.get('Content-Type') == 'application/json'):
+                messages.error(request, 'Invalid request.')
+                return redirect('/')
+            return f(request, *args, **kwargs)
+        wrap.__doc__ = f.__doc__
+        wrap.__name__ = f.__name__
+        return wrap
     return decorator

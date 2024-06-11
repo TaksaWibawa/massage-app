@@ -1,13 +1,13 @@
-from .models import Role, Employee, Service, Assignment
-from .utils import get_global_setting
-from datetime import time
-from django import forms
-from django.contrib.auth import authenticate
-from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
-from django.contrib.auth.models import User
-from django.core.exceptions import ValidationError
-from django.utils import timezone
 import calendar
+from django.utils import timezone
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth import authenticate
+from django import forms
+from datetime import time
+from .utils import get_global_setting
+from .models import Role, Employee, Service, Assignment
 
 
 class UserAdminForm(UserCreationForm):
@@ -37,6 +37,7 @@ class LoginForm(AuthenticationForm):
         self.user = user
         return self.cleaned_data
 
+
 class CreateUserForm(forms.ModelForm):
     username = forms.CharField(required=True, widget=forms.TextInput(
         attrs={'class': 'form-control', 'id': 'username'}))
@@ -63,7 +64,8 @@ class CreateUserForm(forms.ModelForm):
         )
         user.save()
         return user
-    
+
+
 class ChangePasswordForm(forms.Form):
     username = forms.CharField(required=True, widget=forms.TextInput(
         attrs={'class': 'form-control', 'id': 'username', 'readonly': 'readonly'}))
@@ -93,6 +95,7 @@ class ChangePasswordForm(forms.Form):
             self.user.save()
         return self.user
 
+
 class EmployeeForm(forms.ModelForm):
     color = forms.CharField(required=True, widget=forms.TextInput(
         attrs={'id': 'color', 'type': 'color', 'value': '#48D75F'}))
@@ -115,7 +118,6 @@ class EmployeeForm(forms.ModelForm):
         cleaned_data = super().clean()
         image = cleaned_data.get('image')
         user = cleaned_data.get('user')
-    
 
         if image is None:
             self.add_error('image', 'Please upload an image')
@@ -167,38 +169,12 @@ class ServiceForm(forms.ModelForm):
 
 class AssignmentForm(forms.ModelForm):
     def default_start_date():
-        now = timezone.localtime(timezone.now())
-        return now.replace(hour=18, minute=0, second=0, microsecond=0)
+        return timezone.localtime(timezone.now()).replace(hour=18, minute=0, second=0, microsecond=0)
 
     def validate_time_range(value):
-        start_time = time(18, 0)
-        end_time = time(22, 0)
-
-        if not (start_time <= value.time() <= end_time):
+        if not (time(18, 0) <= value.time() <= time(22, 0)):
             raise ValidationError("Time must be between 18:00 and 22:00.")
-
-    def calculate_end_time(self, start_date=None, service=None):
-        if start_date and service:
-            end_date = start_date + \
-                timezone.timedelta(minutes=service.duration)
-
-            if end_date.time() > time(22, 0):
-                self.add_error(
-                    'start_date', 'The selected time range exceeds the working hours. (18:00 - 22:00)')
-            
-            return end_date
         
-    def get_chair_choices(self):
-        try:
-            max_chairs = get_global_setting('max chairs')
-            if max_chairs is None:
-                max_chairs = 8
-            else:
-                max_chairs = int(max_chairs)
-        except Exception as e:
-            max_chairs = 8
-        return [(None, '')] + [(i, i) for i in range(1, max_chairs + 1)]
-    
     service = forms.ModelChoiceField(queryset=Service.objects.filter(is_active=True), empty_label='', initial=None, required=True,
                                      widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'service'}))
     employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True, role__name__iexact='employee'), empty_label='', initial=None, required=True,
@@ -219,41 +195,59 @@ class AssignmentForm(forms.ModelForm):
         widget=forms.SplitDateTimeWidget(
             date_format='%Y-%m-%d',
             time_format='%H:%M',
-            date_attrs={'type': 'date', 'class': 'form-control', 'min': timezone.now().date().isoformat()},
+            date_attrs={'type': 'date', 'class': 'form-control',
+                        'min': timezone.now().date().isoformat()},
             time_attrs={'type': 'time', 'class': 'form-control'}
         ),
     )
 
+    def calculate_end_time(self, start_date=None, service=None):
+        if start_date and service:
+            end_date = start_date + timezone.timedelta(minutes=service.duration)
+            return end_date
+
+    def get_available_chairs(self, start_date, end_date, assignment_id=None):
+        max_chairs = get_global_setting('max chairs')
+        all_chairs = range(1, max_chairs + 1)
+
+        occupied_chairs_query = Assignment.objects.filter(
+            start_date__lt=end_date,
+            end_date__gt=start_date,
+        ).exclude(id=assignment_id)
+
+        occupied_chairs = occupied_chairs_query.values_list('chair', flat=True)
+
+        return [chair for chair in all_chairs if chair not in occupied_chairs]
+
     class Meta:
         model = Assignment
-        fields = ['service', 'employee', 'chair',
-                  'customer', 'phone', 'start_date']
-        
+        fields = ['start_date', 'service', 'chair', 'employee', 'customer', 'phone']
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['chair'].choices = self.get_chair_choices()
+        self.fields['chair'].choices = [(i, str(i)) for i in range(1, get_global_setting('max chairs') + 1)]
 
     def check_overlapping_assignments(self, start_date, end_date, employee=None, chair=None):
-        # Check if there is an assignment on the same date range for a chair
-        if chair and Assignment.objects.exclude(id=self.instance.id).filter(
-            chair=chair,
+        overlapping_assignments_query = Assignment.objects.exclude(id=self.instance.id).filter(
             start_date__lt=end_date,
             end_date__gt=start_date,
-        ).exists():
-            self.add_error(
-                'chair', 'The selected chair is already occupied at this time.')
-            self.add_error(
-                'start_date', 'The selected time range overlaps with another assignment.')
-    
-        # Check if an employee is assigned to multiple assignments on the same date range
-        if employee and Assignment.objects.exclude(id=self.instance.id).filter(
-            employee=employee,
-            start_date__lt=end_date,
-            end_date__gt=start_date,
-            is_done=False,
-        ).exists():
-            self.add_error(
-                'employee', 'The selected employee is already occupied at this time.')
+        )
+
+        overlapping_chair_assignment = overlapping_assignments_query.filter(chair=chair).first()
+        overlapping_employee_assignment = overlapping_assignments_query.filter(employee=employee).first()
+
+        if overlapping_chair_assignment:
+            start_date_str = timezone.localtime(overlapping_chair_assignment.start_date).strftime('%H:%M')
+            end_date = timezone.localtime(overlapping_chair_assignment.end_date)
+            end_date_str = end_date.strftime('%H:%M')
+            self.add_error('chair', f'Chair taken from {start_date_str} to {end_date_str}.')
+            self.add_error('start_date', f'Time slot taken from {start_date_str} to {end_date_str}.')
+
+        if overlapping_employee_assignment:
+            start_date_str = timezone.localtime(overlapping_employee_assignment.start_date).strftime('%H:%M')
+            end_date = timezone.localtime(overlapping_employee_assignment.end_date)
+            end_date_str = end_date.strftime('%H:%M')
+            self.add_error('employee', f'Employee booked from {start_date_str} to {end_date_str}.')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -262,17 +256,23 @@ class AssignmentForm(forms.ModelForm):
         chair = cleaned_data.get('chair')
         employee = cleaned_data.get('employee')
 
-        if start_date.date() < timezone.localdate():
-            self.add_error('start_date', 'Assignment cannot be backdated.')
+        if start_date is not None and start_date.date() < timezone.localdate():
+            self.add_error('start_date', 'Cannot backdate assignment.')
 
-        if start_date and service:
-            end_date = self.calculate_end_time(start_date, service)
-            self.check_overlapping_assignments(start_date, end_date, employee=employee, chair=chair)
+        end_date = self.calculate_end_time(start_date, service)
+        if end_date and end_date.time() > time(22, 0):
+            self.add_error('start_date', 'Exceeds working hours (18:00 - 22:00).')
+
+        self.check_overlapping_assignments(start_date, end_date, employee, chair)
+
+        available_chairs = self.get_available_chairs(start_date, end_date, self.instance.id)
+        if chair and int(chair) not in available_chairs:
+            self.add_error('chair', 'Chair not available at this time.')
 
         return cleaned_data
 
     def save(self, commit=True):
-        return super(AssignmentForm, self).save(commit=commit)
+        return super().save(commit=commit)
 
 
 class ServiceChoiceField(forms.ModelChoiceField):
@@ -296,13 +296,15 @@ AdditionalServicesFormset = forms.formset_factory(
     max_num=3
 )
 
+
 class MonthFilterForm(forms.Form):
     MONTH_CHOICES = [(i, calendar.month_name[i]) for i in range(1, 13)]
     month = forms.ChoiceField(choices=MONTH_CHOICES, required=False, widget=forms.Select(
         attrs={'class': 'form-control form-select', 'id': 'month'}))
-    
+
     def __init__(self, *args, **kwargs):
         super(MonthFilterForm, self).__init__(*args, **kwargs)
+
 
 class EmployeeFilterForm(forms.Form):
     employee = forms.ModelChoiceField(queryset=None, required=False,
@@ -315,16 +317,22 @@ class EmployeeFilterForm(forms.Form):
         super(EmployeeFilterForm, self).__init__(*args, **kwargs)
 
         if request and request.user.groups.filter(name__iexact='employee').exists():
-            self.fields['employee'].queryset = Employee.objects.filter(user=request.user, is_active=True, role__name__iexact='employee')
+            self.fields['employee'].queryset = Employee.objects.filter(
+                user=request.user, is_active=True, role__name__iexact='employee')
         else:
-            self.fields['employee'].queryset = Employee.objects.filter(is_active=True, role__name__iexact='employee')
+            self.fields['employee'].queryset = Employee.objects.filter(
+                is_active=True, role__name__iexact='employee')
 
-    
+
 class RecapPaySelectedForm(forms.Form):
-    assignment_ids = forms.CharField(widget=forms.HiddenInput(attrs={'id': 'assignment-ids'}))
-    total_fee = forms.DecimalField(widget=forms.HiddenInput(attrs={'id': 'total-fee'}))
-    fee_percentage = forms.DecimalField(widget=forms.HiddenInput(attrs={'id': 'fee-percentage'}))
-    total_payment = forms.DecimalField(widget=forms.NumberInput(attrs={'class': 'form-control', 'id': 'total-payment'}))
+    assignment_ids = forms.CharField(
+        widget=forms.HiddenInput(attrs={'id': 'assignment-ids'}))
+    total_fee = forms.DecimalField(
+        widget=forms.HiddenInput(attrs={'id': 'total-fee'}))
+    fee_percentage = forms.DecimalField(
+        widget=forms.HiddenInput(attrs={'id': 'fee-percentage'}))
+    total_payment = forms.DecimalField(widget=forms.NumberInput(
+        attrs={'class': 'form-control', 'id': 'total-payment'}))
     total_payment.widget.attrs['min'] = 0
     total_payment.widget.attrs['step'] = 1000
     total_payment.widget.attrs['required'] = True
@@ -335,6 +343,7 @@ class RecapPaySelectedForm(forms.Form):
         total_fee = cleaned_data.get('total_fee')
 
         if total_payment < total_fee:
-            self.add_error('total_payment', 'Total payment must be greater than or equal to total fee')
+            self.add_error(
+                'total_payment', 'Total payment must be greater than or equal to total fee')
 
         return cleaned_data

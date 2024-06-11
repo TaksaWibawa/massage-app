@@ -15,6 +15,7 @@ urlpatterns = [
   path('assignment/create' , assignment.NewAssignmentPage, name='new_assignment'),
   path('assignment/edit/<str:id>', assignment.EditAssignmentPage, name='edit_assignment'),
   path('assignment/delete/<str:id>', assignment.DeleteAssignmentPage, name='delete_assignment'),
+  path('assignment/available-chairs', assignment.get_available_chairs, name='get_available_chairs'),
 
   # Employee
   path('employee-list', employee.EmployeeListPage, name='employee_list'),
