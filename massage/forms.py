@@ -174,11 +174,18 @@ class AssignmentForm(forms.ModelForm):
     def validate_time_range(value):
         if not (time(18, 0) <= value.time() <= time(22, 0)):
             raise ValidationError("Time must be between 18:00 and 22:00.")
-        
+
     service = forms.ModelChoiceField(queryset=Service.objects.filter(is_active=True), empty_label='', initial=None, required=True,
                                      widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'service'}))
-    employee = forms.ModelChoiceField(queryset=Employee.objects.filter(is_active=True, role__name__iexact='employee'), empty_label='', initial=None, required=True,
-                                      widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
+    employee = forms.ModelChoiceField(
+        queryset=Employee.objects.filter(
+            is_active=True, role__name__iexact='employee'),
+        empty_label='Unassigned',
+        initial=None,
+        required=False,
+        widget=forms.Select(
+            attrs={'class': 'form-control form-select', 'id': 'employee'})
+    )
     chair = forms.ChoiceField(
         required=True,
         widget=forms.Select(
@@ -203,7 +210,8 @@ class AssignmentForm(forms.ModelForm):
 
     def calculate_end_time(self, start_date=None, service=None):
         if start_date and service:
-            end_date = start_date + timezone.timedelta(minutes=service.duration)
+            end_date = start_date + \
+                timezone.timedelta(minutes=service.duration)
             return end_date
 
     def get_available_chairs(self, start_date, end_date, assignment_id=None):
@@ -221,11 +229,13 @@ class AssignmentForm(forms.ModelForm):
 
     class Meta:
         model = Assignment
-        fields = ['start_date', 'service', 'chair', 'employee', 'customer', 'phone']
+        fields = ['start_date', 'service', 'chair',
+                  'employee', 'customer', 'phone']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['chair'].choices = [(i, str(i)) for i in range(1, get_global_setting('max chairs') + 1)]
+        self.fields['chair'].choices = [(i, str(i)) for i in range(
+            1, get_global_setting('max chairs') + 1)]
 
     def check_overlapping_assignments(self, start_date, end_date, employee=None, chair=None):
         overlapping_assignments_query = Assignment.objects.exclude(id=self.instance.id).filter(
@@ -233,21 +243,30 @@ class AssignmentForm(forms.ModelForm):
             end_date__gt=start_date,
         )
 
-        overlapping_chair_assignment = overlapping_assignments_query.filter(chair=chair).first()
-        overlapping_employee_assignment = overlapping_assignments_query.filter(employee=employee).first()
+        overlapping_chair_assignment = overlapping_assignments_query.filter(
+            chair=chair).first()
+        overlapping_employee_assignment = overlapping_assignments_query.filter(
+            employee=employee).first()
 
         if overlapping_chair_assignment:
-            start_date_str = timezone.localtime(overlapping_chair_assignment.start_date).strftime('%H:%M')
-            end_date = timezone.localtime(overlapping_chair_assignment.end_date)
+            start_date_str = timezone.localtime(
+                overlapping_chair_assignment.start_date).strftime('%H:%M')
+            end_date = timezone.localtime(
+                overlapping_chair_assignment.end_date)
             end_date_str = end_date.strftime('%H:%M')
-            self.add_error('chair', f'Chair taken from {start_date_str} to {end_date_str}.')
-            self.add_error('start_date', f'Time slot taken from {start_date_str} to {end_date_str}.')
+            self.add_error(
+                'chair', f'Chair taken from {start_date_str} to {end_date_str}.')
+            self.add_error(
+                'start_date', f'Time slot taken from {start_date_str} to {end_date_str}.')
 
         if overlapping_employee_assignment:
-            start_date_str = timezone.localtime(overlapping_employee_assignment.start_date).strftime('%H:%M')
-            end_date = timezone.localtime(overlapping_employee_assignment.end_date)
+            start_date_str = timezone.localtime(
+                overlapping_employee_assignment.start_date).strftime('%H:%M')
+            end_date = timezone.localtime(
+                overlapping_employee_assignment.end_date)
             end_date_str = end_date.strftime('%H:%M')
-            self.add_error('employee', f'Employee booked from {start_date_str} to {end_date_str}.')
+            self.add_error(
+                'employee', f'Employee booked from {start_date_str} to {end_date_str}.')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -261,11 +280,14 @@ class AssignmentForm(forms.ModelForm):
 
         end_date = self.calculate_end_time(start_date, service)
         if end_date and end_date.time() > time(22, 0):
-            self.add_error('start_date', 'Exceeds working hours (18:00 - 22:00).')
+            self.add_error(
+                'start_date', 'Exceeds working hours (18:00 - 22:00).')
 
-        self.check_overlapping_assignments(start_date, end_date, employee, chair)
+        self.check_overlapping_assignments(
+            start_date, end_date, employee, chair)
 
-        available_chairs = self.get_available_chairs(start_date, end_date, self.instance.id)
+        available_chairs = self.get_available_chairs(
+            start_date, end_date, self.instance.id)
         if chair and int(chair) not in available_chairs:
             self.add_error('chair', 'Chair not available at this time.')
 

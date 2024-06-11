@@ -103,7 +103,7 @@ class Assignment(Auditable):
         return now.replace(hour=18, minute=0, second=0, microsecond=0)
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, null=True, blank=True)
     service = models.ForeignKey(Service, on_delete=models.CASCADE)
     customer = models.CharField(max_length=100, default='Customer')
     chair = models.IntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(8)])

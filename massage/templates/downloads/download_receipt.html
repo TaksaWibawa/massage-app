@@ -81,7 +81,7 @@
           <p>Time: {% now "H:i" %}</p>
         </td>
         <td class="right">
-          <p>Therapist: {{ assignment.employee.name }}</p>
+          <p>Therapist: {{ assignment.employee.name|default:"Unassigned" }}</p>
           <p>Customer: {{ assignment.customer }}</p>
           <p>Cashier: Admin</p>
         </td>

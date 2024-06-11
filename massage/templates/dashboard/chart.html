@@ -47,20 +47,20 @@
                 <div class="task"
                      style="grid-row-start: {{ task_with_position.start_row }};
                             grid-row-end: {{ task_with_position.end_row }};
-                            background-color: {% if task_with_position.task.is_done %}#C8C8C8{% else %}{{ task_with_position.task.employee.color }}{% endif %};"
+                            background-color: {% if task_with_position.task.is_done %}#C8C8C8{% elif not task_with_position.task.employee.name %}#FFCCCC{% else %}{{ task_with_position.task.employee.color }}{% endif %};"
                      data-bs-toggle="modal"
                      data-bs-target="#taskModal"
                      data-task-id="{{ task_with_position.task.id }}"
                      data-task-chair="{{ task_with_position.task.chair }}"
                      data-task-customer="{{ task_with_position.task.customer }}"
                      data-task-phone="{{ task_with_position.task.phone }}"
-                     data-task-employee="{{ task_with_position.task.employee.name }}"
+                     data-task-employee="{{ task_with_position.task.employee.name|default:"Unassigned" }}"
                      data-task-service="{{ task_with_position.task.service }}"
                      data-task-time="{{ task_with_position.start_time }} - {{ task_with_position.end_time }}"
                      data-task-done="{{ task_with_position.task.is_done }}">
                   <div class="task-item">
                     <div class="task-item__time">{{ task_with_position.start_time }} - {{ task_with_position.end_time }}</div>
-                    <div class="task-item__employee">{{ task_with_position.task.employee.name }}</div>
+                    <div class="task-item__employee">{{ task_with_position.task.employee.name|default:"Unassigned" }}</div>
                     <div class="task-item__service">{{ task_with_position.task.service }}</div>
                   </div>
                 </div>

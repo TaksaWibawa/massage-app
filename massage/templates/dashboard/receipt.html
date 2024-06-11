@@ -24,7 +24,7 @@
           <p>Time : {% now "H:i" %}</p>
         </div>
         <div class="receipt-info-right">
-          <p>Therapist : {{ assignment.employee.name }}</p>
+          <p>Therapist : {{ assignment.employee.name|default:"Unassigned" }}</p>
           <p>Cust : {{ assignment.customer }}</p>
           <p>Cashier : Admin</p>
         </div>
