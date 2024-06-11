@@ -1,40 +1,73 @@
 from .utils import get_global_setting
 
 def nav_menus(request):
-    MENU_ITEMS = [
-        {
-            "Dashboard": [
-                {"name": "Home", "url": "landing_page"},
-                {"name": "Chart", "url": "chart"},
-                {"name": "Recap", "url": "recap"},
-                {"name": "Recap History", "url": "recap_history"},
-                {"name": "Report", "url": "report"},
-                {"name": "New Assignment", "url": "new_assignment"}
-            ]
-        },
-        {
-            "Employee": [
-                {"name": "New Employee", "url": "employee_new"},
-                {"name": "Employee List", "url": "employee_list"}
-            ]
-        },
-        {
-            "Service": [
-                {"name": "New Service", "url": "service_new"},
-                {"name": "Service List", "url": "service_list"}
-            ]
-        }
-    ]
-
-    if request.user.groups.filter(name__iexact='employee').exists():
+    if request.user.is_superuser:
         MENU_ITEMS = [
             {
                 "Dashboard": [
                     {"name": "Home", "url": "landing_page"},
+                    {"name": "Chart", "url": "chart"},
+                    {"name": "New Assignment", "url": "new_assignment"},
                     {"name": "Recap", "url": "recap"},
+                    {"name": "Recap History", "url": "recap_history"},
+                    {"name": "Report", "url": "report"},
+                ]
+            },
+            {
+                "Employee": [
+                    {"name": "New Employee", "url": "employee_new"},
+                    {"name": "Employee List", "url": "employee_list"}
+                ]
+            },
+            {
+                "Service": [
+                    {"name": "New Service", "url": "service_new"},
+                    {"name": "Service List", "url": "service_list"}
                 ]
             }
         ]
+    elif request.user.groups.filter(name__iexact='supervisor').exists():
+        MENU_ITEMS = [
+            {
+                "Dashboard": [
+                    {"name": "Chart", "url": "chart"},
+                    {"name": "New Assignment", "url": "new_assignment"}
+                ]
+            },
+            {
+                "Employee": [
+                    {"name": "New Employee", "url": "employee_new"},
+                    {"name": "Employee List", "url": "employee_list"}
+                ]
+            },
+            {
+                "Service": [
+                    {"name": "New Service", "url": "service_new"},
+                    {"name": "Service List", "url": "service_list"}
+                ]
+            }
+        ]
+    elif request.user.groups.filter(name__iexact='accountant').exists():
+        MENU_ITEMS = [
+            {
+                "Dashboard": [
+                    {"name": "Recap", "url": "recap"},
+                    {"name": "Recap History", "url": "recap_history"},
+                    {"name": "Report", "url": "report"},
+                ]
+            }
+        ]
+    elif request.user.groups.filter(name__iexact='employee').exists():
+        MENU_ITEMS = [
+            {
+                "Dashboard": [
+                    {"name": "Recap", "url": "recap"},
+                    {"name": "Recap History", "url": "recap_history"},
+                ]
+            }
+        ]
+    else:
+        MENU_ITEMS = []
 
     return {'MENU_ITEMS': MENU_ITEMS}
 

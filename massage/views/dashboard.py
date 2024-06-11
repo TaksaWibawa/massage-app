@@ -7,7 +7,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 from massage.context_processors import chart_context
-from massage.decorator import auth_required, supervisor_required
+from massage.decorator import auth_required, role_required
 from massage.forms import EmployeeFilterForm, MonthFilterForm
 from massage.models import Assignment, Employee, Receipt, EmployeePayment
 from massage.services.recap import generate_recap_pdf
@@ -17,7 +17,7 @@ def LandingPage(request):
     return render(request, 'dashboard/landing_page.html')
 
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['supervisor'])
 def ChartPage(request):
     context = chart_context(request)
 
@@ -64,7 +64,7 @@ def ChartPage(request):
 
     return render(request, 'dashboard/chart.html', context)
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['accountant'])
 def ReportPage(request):
     filter_form = MonthFilterForm(request.GET or None, initial={'month': datetime.now().month})
     current_year = datetime.now().year
@@ -92,7 +92,7 @@ def ReportPage(request):
 
     return render(request, 'dashboard/report.html', {'report': report, 'filter_form': filter_form})
 
-@auth_required
+@role_required(allowed_roles=['accountant', 'employee'])
 def RecapPage(request):
     is_employee = request.user.groups.filter(name__iexact='employee').exists()
     filter_form = EmployeeFilterForm(request.GET or None, request=request, initial={'date': timezone.localtime().date()})
@@ -130,19 +130,24 @@ def RecapPage(request):
 
     return render(request, 'dashboard/recap.html', context)
 
-@auth_required
+@role_required(allowed_roles=['accountant', 'employee'])
 def RecapHistoryPage(request):
     is_employee = request.user.groups.filter(name__iexact='employee').exists()
     filter_form = EmployeeFilterForm(request.GET or None, request=request, initial={'date': timezone.localtime().date()})
     selected_date = filter_form.cleaned_data.get('date') if filter_form.is_valid() else timezone.localtime().date()
     employee = filter_form.cleaned_data.get('employee') if filter_form.is_valid() and not is_employee else None
 
+    if selected_date is None:
+        selected_date = timezone.localtime().date()
+
     if is_employee:
         employee = Employee.objects.get(user=request.user)
 
     employee_payments = EmployeePayment.objects.filter(
         receipt__assignment__start_date__date__lte=selected_date,
+        is_paid=True
     ).order_by('receipt__assignment__employee')
+
     if employee:
         employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
 
@@ -170,6 +175,7 @@ def RecapHistoryPage(request):
 
     return render(request, 'dashboard/recap_history.html', context)
 
+@role_required(allowed_roles=['accountant'])
 def RecapConfirmPage(request):
     date = request.GET.get('date')
     employee = request.GET.get('employee')

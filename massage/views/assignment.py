@@ -3,12 +3,12 @@ from django.contrib import messages
 from django.http import JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from massage.decorator import supervisor_required, fetch_required
+from massage.decorator import role_required, fetch_required
 from massage.forms import AssignmentForm
 from massage.models import Assignment, Service
 from massage.utils import get_global_setting
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['supervisor'])
 def EditAssignmentPage(request, id):
     assignment = Assignment.objects.get(id=id)
 
@@ -25,7 +25,7 @@ def EditAssignmentPage(request, id):
         form = AssignmentForm(instance=assignment)
     return render(request, 'assignments/assignment_edit.html', {'form': form})
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=[])
 def DeleteAssignmentPage(request, id):
     assignment = get_object_or_404(Assignment, id=id)
     if request.method == 'POST':
@@ -35,7 +35,7 @@ def DeleteAssignmentPage(request, id):
 
     return render(request, 'assignments/assignment_delete.html', {'assignment': assignment})
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['supervisor'])
 def NewAssignmentPage(request):
     if request.method == 'POST':
         form = AssignmentForm(request.POST)
@@ -50,6 +50,7 @@ def NewAssignmentPage(request):
     return render(request, 'assignments/assignment_new.html', {'form': form})
 
 @fetch_required(allowed_methods=['GET'])
+@role_required(allowed_roles=['supervisor'])
 def get_available_chairs(request):
     start_date = request.GET.get('start_date')
     start_time = request.GET.get('start_time')

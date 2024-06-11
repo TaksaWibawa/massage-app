@@ -99,7 +99,9 @@
           <a type="button" class="btn pay-button" href="{% url 'receipt' 9999 %}">Print</a>
           <div class="not-done-buttons">
             <a type="button" class="btn edit-button" href="{% url 'edit_assignment' 9999 %}">Edit</a>
-            <a type="button" class="btn delete-button" href="{% url 'delete_assignment' 9999 %}">Delete</a>
+            {% if request.user.is_superuser %}
+              <a type="button" class="btn delete-button" href="{% url 'delete_assignment' 9999 %}">Delete</a>
+            {% endif %}
           </div>
         </div>
       </div>
@@ -149,9 +151,21 @@
 
           this.dataset.taskId = taskId;
 
-          document.querySelector('.pay-button').href = payUrlTemplate.replace('9999', taskId);
-          document.querySelector('.edit-button').href = editUrlTemplate.replace('9999', taskId);
-          document.querySelector('.delete-button').href = deleteUrlTemplate.replace('9999', taskId);
+          const payButton = document.querySelector('.pay-button');
+          const editButton = document.querySelector('.edit-button');
+          const deleteButton = document.querySelector('.delete-button');
+
+          if (payButton) {
+            payButton.href = payUrlTemplate.replace('9999', taskId);
+          }
+
+          if (editButton) {
+            editButton.href = editUrlTemplate.replace('9999', taskId);
+          }
+          
+          if (deleteButton) {
+            deleteButton.href = deleteUrlTemplate.replace('9999', taskId);
+          }
 
           document.getElementById('task-time').textContent = `Time: ${taskData.time} ${taskData.is_done ? '(Finished)' : '(On Going)'}`;
           document.getElementById('task-chair').textContent = `Chair Number: ${taskData.chair}`;

@@ -11,7 +11,14 @@ def LoginPage(request):
         if form.is_valid():
             login(request, form.user)
             messages.success(request, 'Login successful.')
-            return redirect('/')
+            if form.user.groups.filter(name__iexact='supervisor').exists():
+                return redirect('chart')
+            elif form.user.groups.filter(name__iexact='accountant').exists():
+                return redirect('recap')
+            elif form.user.groups.filter(name__iexact='employee').exists():
+                return redirect('recap')
+            else:
+                return redirect('/')
         else:
             messages.error(request, 'Invalid username or password.')
     else:

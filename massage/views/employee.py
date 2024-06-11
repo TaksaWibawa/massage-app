@@ -1,17 +1,17 @@
 from massage.models import Employee
 from massage.forms import CreateUserForm, EmployeeForm, ChangePasswordForm
-from massage.decorator import supervisor_required
+from massage.decorator import role_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import Group
 from django.contrib import messages
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['supervisor'])
 def EmployeeListPage(request):
     employees = Employee.objects.filter(role__name__iexact='employee')
     return render(request, 'employees/employee_list.html', {'employees': employees})
 
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['supervisor'])
 def EmployeeNewPage(request):
     if request.method == 'POST':
         user_form = CreateUserForm(request.POST)
@@ -34,7 +34,7 @@ def EmployeeNewPage(request):
         employee_form = EmployeeForm()
     return render(request, 'employees/employee_new.html', {'user_form': user_form, 'employee_form': employee_form, 'is_edit_page': False})
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['supervisor'])
 def EmployeeEditPage(request, id):
     employee = Employee.objects.get(id=id)
     if request.method == 'POST':
@@ -49,7 +49,7 @@ def EmployeeEditPage(request, id):
         employee_form = EmployeeForm(instance=employee)
     return render(request, 'employees/employee_edit.html', {'employee_form': employee_form, 'is_edit_page': True, 'employee_id': employee.id})
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['supervisor'])
 def EmployeeChangePasswordPage(request, id):
     employee = get_object_or_404(Employee, id=id)
     user = employee.user
@@ -64,12 +64,3 @@ def EmployeeChangePasswordPage(request, id):
     else:
         form = ChangePasswordForm(user=user)
     return render(request, 'employees/employee_change_password.html', {'password_form': form})
-
-
-@supervisor_required(allowed_roles=['supervisor'])
-def EmployeeDeletePage(request, id):
-    employee = get_object_or_404(Employee, id=id)
-    if request.method == 'POST':
-        employee.delete()
-        return redirect('employee_list')
-    return render(request, 'employees/employee_delete.html', {'employee': employee})

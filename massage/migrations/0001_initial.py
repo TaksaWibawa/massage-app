@@ -153,7 +153,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='assignment',
             name='employee',
-            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='massage.employee'),
+            field=models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='massage.employee', null=True, blank=True),
         ),
         migrations.AddField(
             model_name='assignment',

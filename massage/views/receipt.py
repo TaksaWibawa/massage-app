@@ -3,7 +3,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
-from massage.decorator import supervisor_required, fetch_required
+from massage.decorator import role_required, fetch_required
 from massage.forms import AdditionalServicesFormset
 from massage.models import Assignment, Service, Receipt, ReceiptService
 from massage.services.receipt import generate_invoice_number, create_receipt, generate_pdf_response
@@ -11,7 +11,7 @@ from massage.utils import get_global_setting
 import json
 
 
-@supervisor_required(allowed_roles=['supervisor'])
+@role_required(allowed_roles=['supervisor'])
 def ReceiptPage(request, id):
     assignment = get_object_or_404(Assignment, id=id)
 
@@ -86,6 +86,7 @@ def ReceiptPage(request, id):
 
 
 @fetch_required(allowed_methods=['POST'])
+@role_required(allowed_roles=['supervisor'])
 def finalize_receipt(request, id):
     assignment = get_object_or_404(Assignment, id=id)
     fee_percentage = get_global_setting('Service Fee')

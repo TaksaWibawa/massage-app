@@ -20,7 +20,7 @@ def protected(function):
             return function(request, *args, **kwargs)
     return wrap
 
-def supervisor_required(allowed_roles=[]):
+def role_required(allowed_roles=[]):
     def decorator(view_func):
         @wraps(view_func)
         def _wrapped_view(request, *args, **kwargs):

@@ -47,7 +47,6 @@ class UserAdmin(DefaultUserAdmin):
 
     def save_model(self, request, obj, form, change):
         role = form.cleaned_data.get('role')
-        obj.is_staff = role.id == 1 or role.name == 'supervisor'
         obj.save()
         Employee.objects.get_or_create(user=obj, defaults={'role': role})
 
