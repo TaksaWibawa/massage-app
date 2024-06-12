@@ -49,8 +49,8 @@ def ChartPage(request):
         end_row = (end.hour * 60 + end.minute - 18 * 60) + 1
         tasks_with_positions.append({
             'task': task,
-            'start_time': start.strftime('%H:%M'),
-            'end_time': end.strftime('%H:%M'),
+            'start_time': start.strftime('%I:%M %p'),
+            'end_time': end.strftime('%I:%M %p'),
             'start_row': start_row,
             'end_row': end_row,
         })
