@@ -450,23 +450,59 @@ p {
 
 .content-group {
   display: grid;
-  grid-template-columns: 0.5fr 1fr 1fr;
+  grid-template-columns: 0.25fr 1fr 1fr;
   gap: 24px;
-  height: 100%;
   position: relative;
   z-index: 0;
+  margin-bottom: 24px;
 }
 
-.content-group .chairs {
-  display: contents;
+.chairs {
+  grid-column: span 1;
+}
+
+.portrait {
+  display: block;
+}
+
+.landscape {
+  display: none;
+}
+
+@media screen and (orientation: landscape) {
+  .content-group {
+    grid-auto-flow: column;
+  }
+  
+  .chairs {
+    grid-column: span 1 / auto;
+  }
+
+  .landscape {
+    display: block;
+  }
+
+  .portrait {
+    display: none;
+  }
+}
+
+.time-slots-wrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+.empty-cell{
+  height: 35.1736px;
+  margin-bottom: 9px;
 }
 
 .time-slots, .tasks {
   display: grid;
+  height: 100%;
 }
 
 .time-slots {
-  grid-template-rows: repeat(9, 1fr);
   row-gap: 64px;
 }
 
@@ -524,6 +560,7 @@ p {
   font-size: 16px;
   color: white;
   background-color: #5291ac;
+  margin-bottom: 8px;
 }
 
 .receipt-header, .print-receipt__header {
@@ -637,14 +674,15 @@ p {
 }
 
 .chart-actions .filter-wrapper {
-  justify-content: space-between;
+  justify-content: center;
 }
 
+
 .filter-wrapper input, .filter-wrapper .form-select {
-  border: none;
+  border: 1px solid #c3c3c3;
   border-radius: 0;
   outline: none;
-  background: white;
+  background: transparent;
   padding-block: 8px;
 }
 

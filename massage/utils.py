@@ -1,6 +1,7 @@
 from django.http import HttpResponse
 from django_xhtml2pdf.utils import generate_pdf as generate_pdf_xhtml2pdf
-from .models import GlobalSettings, ReceiptService, Service, Receipt
+from datetime import datetime
+from .models import GlobalSettings
 
 
 def get_global_setting(name):
@@ -10,6 +11,8 @@ def get_global_setting(name):
             value = int(setting.value)
         elif setting.type == 'percentage':
             value = float(setting.value)
+        elif setting.type == 'time':
+            value = datetime.strptime(setting.value, '%H:%M')
         else:
             value = setting.value
         return value

@@ -5,6 +5,7 @@ from django.db import models
 from django.core.validators import MinValueValidator, MaxValueValidator, ValidationError
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
+from django.core.exceptions import ObjectDoesNotExist
 from colorfield.fields import ColorField
 
 def default_user():
@@ -43,9 +44,10 @@ class GlobalSettings(models.Model):
         ('number', 'Number'),
         ('percentage', 'Percentage (0-100)'),
         ('text', 'Text'),
+        ('time', 'Time')
     ]
 
-    name = models.CharField(max_length=255, unique=True, primary_key=True, default='Max Chairs', editable=False)
+    name = models.CharField(max_length=255, unique=True, primary_key=True, default='Max Chairs')
     type = models.CharField(max_length=10, choices=TYPE_CHOICES, default='number')
     value = models.TextField(default='8')
 
@@ -62,6 +64,24 @@ class GlobalSettings(models.Model):
             raise ValidationError(_('Value must be a percentage (0-100) for type Percentage'))
         elif self.type == 'text' and not isinstance(self.value, str):
             raise ValidationError(_('Value must be a text for type Text'))
+        elif self.type == 'time':
+            try:
+                timezone.datetime.strptime(self.value, '%H:%M')
+            except ValueError:
+                raise ValidationError(_('Value must be a time in HH:MM format for type Time'))
+    
+    def save(self, *args, **kwargs):
+        if self.pk is not None:
+            try:
+                orig = GlobalSettings.objects.get(pk=self.pk)
+                if orig.name != self.name:
+                    raise ValidationError("You cannot change the name field of an existing GlobalSettings instance.")
+            except ObjectDoesNotExist:
+                pass
+        else:
+            if GlobalSettings.objects.filter(name=self.name).exists():
+                raise ValidationError("A GlobalSettings instance with this name already exists.")
+        super().save(*args, **kwargs)
 
 class Role(models.Model):
     id = models.AutoField(primary_key=True)

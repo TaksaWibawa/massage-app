@@ -54,9 +54,9 @@ def ChartPage(request):
         })
 
     context['tasks_with_positions'] = tasks_with_positions
-
+    
     for i, time_slot in enumerate(context['TIME_SLOTS']):
-        time = datetime.strptime(time_slot, '%H:%M')
+        time = datetime.strptime(time_slot, '%I:%M %p')
         row = ((time.hour * 60 + time.minute - 18 * 60) / 240) * 100
         context['TIME_SLOTS'][i] = (time_slot, row)
     

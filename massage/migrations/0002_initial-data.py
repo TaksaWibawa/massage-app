@@ -11,6 +11,9 @@ def add_global_settings(apps, schema_editor):
         {'name': 'Max Chairs', 'type': 'number', 'value': '8'},
         {'name': 'PPN', 'type': 'percentage', 'value': '10'},
         {'name': 'Service Fee', 'type': 'percentage', 'value': '40'},
+        {'name': 'Start Hour', 'type': 'time', 'value': '18:00'},
+        {'name': 'End Hour', 'type': 'time', 'value': '22:00'},
+        {'name': 'Interval', 'type': 'number', 'value': '30'},
     ]
 
     for setting in settings:
