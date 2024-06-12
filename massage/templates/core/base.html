@@ -54,23 +54,33 @@
                   data-bs-dismiss="offcanvas"
                   aria-label="Close"></button>
         </div>
-        <nav class="offcanvas-body position-relative">
+        <nav class="offcanvas-body">
           <ul class="navbar-nav">
             {% for menu in MENU_ITEMS %}
               {% for key, value in menu.items %}
-                <div class="menu" onclick="toggleSubmenu(event)">
-                  <div class="menu-toggle">
-                    <i class="fa-solid fa-play fa-rotate-90"></i>
-                    <span class="menu-heading">{{ key }}</span>
-                  </div>
-                  <ul class="submenu-list">
-                    {% for item in value %}
-                      <li>
-                        <a href="{% url item.url %}" class="submenu-item">{{ item.name }}</a>
-                      </li>
-                    {% endfor %}
-                  </ul>
-                </div>
+                <li class="nav-item {% if key == 'Priority' %} priority-menu {% endif %}">
+                  {% if key == 'Priority' %}
+                    <div class="priority">
+                      {% for item in value %}
+                        <a href="{% url item.url %}" class="btn btn-lg btn-info">{{ item.name }}</a>
+                      {% endfor %}
+                    </div>
+                  {% else %}
+                    <div class="menu" onclick="toggleSubmenu(event)">
+                      <div class="menu-toggle">
+                        <i class="fa-solid fa-play fa-rotate-90"></i>
+                        <span class="menu-heading">{{ key }}</span>
+                      </div>
+                      <ul class="submenu-list">
+                        {% for item in value %}
+                          <li>
+                            <a href="{% url item.url %}" class="submenu-item">{{ item.name }}</a>
+                          </li>
+                        {% endfor %}
+                      </ul>
+                    </div>
+                  {% endif %}
+                </li>
               {% endfor %}
             {% endfor %}
           </ul>

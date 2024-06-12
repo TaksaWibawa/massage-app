@@ -107,72 +107,75 @@
       </div>
     </div>
   </div>
-  <script>
-      document.getElementById('date').addEventListener('change', function() {
-        document.getElementById('filter-submit').click();
-      });
-    
-      document.getElementById('employee').addEventListener('change', function() {
-        document.getElementById('filter-submit').click();
-      });
-
-      let payUrlTemplate = "{% url 'receipt' 9999 %}";
-      let editUrlTemplate = "{% url 'edit_assignment' 9999 %}";
-      let deleteUrlTemplate = "{% url 'delete_assignment' 9999 %}";
-
-      function getTaskData(task) {
-        return {
-            id: task.getAttribute('data-task-id'),
-            chair: task.getAttribute('data-task-chair'),
-            customer: task.getAttribute('data-task-customer'),
-            phone: task.getAttribute('data-task-phone'),
-            employee: task.getAttribute('data-task-employee'),
-            service: task.getAttribute('data-task-service'),
-            time: task.getAttribute('data-task-time'),
-            is_done: task.getAttribute('data-task-done') === 'True',
-        };
-      }
-
-      const taskModal = document.getElementById('taskModal');
-      taskModal.addEventListener('show.bs.modal', function(event) {
-          const button = event.relatedTarget;
-          const taskId = button.getAttribute('data-task-id');
-          const modal = this;
-          const task = document.querySelector(`.task[data-task-id="${taskId}"]`);
-          const taskData = getTaskData(task);
-
-          if (taskData.is_done) {
-            document.querySelector('.not-done-buttons').classList.add('d-none');
-            document.querySelector('.pay-button').textContent = 'Print';
-          } else {
-            document.querySelector('.not-done-buttons').classList.remove('d-none');
-            document.querySelector('.pay-button').textContent = 'Payment';
-          }
-
-          this.dataset.taskId = taskId;
-
-          const payButton = document.querySelector('.pay-button');
-          const editButton = document.querySelector('.edit-button');
-          const deleteButton = document.querySelector('.delete-button');
-
-          if (payButton) {
-            payButton.href = payUrlTemplate.replace('9999', taskId);
-          }
-
-          if (editButton) {
-            editButton.href = editUrlTemplate.replace('9999', taskId);
-          }
-          
-          if (deleteButton) {
-            deleteButton.href = deleteUrlTemplate.replace('9999', taskId);
-          }
-
-          document.getElementById('task-time').textContent = `Time: ${taskData.time} ${taskData.is_done ? '(Finished)' : '(On Going)'}`;
-          document.getElementById('task-chair').textContent = `Chair Number: ${taskData.chair}`;
-          document.getElementById('task-customer').textContent = `Customer Name: ${taskData.customer}`;
-          document.getElementById('task-phone').textContent = `Phone Number: ${taskData.phone ? taskData.phone : '-'}`;
-          document.getElementById('task-employee').textContent = `Employee in Charge: ${taskData.employee}`;
-          document.getElementById('task-service').textContent = `Service: ${taskData.service}`;
-      });
-  </script>
 {% endblock content %}
+{% block scripts %}
+  {{ block.super }}
+  <script>
+    document.getElementById('date').addEventListener('change', function() {
+      document.getElementById('filter-submit').click();
+    });
+
+    document.getElementById('employee').addEventListener('change', function() {
+      document.getElementById('filter-submit').click();
+    });
+
+    let payUrlTemplate = "{% url 'receipt' 9999 %}";
+    let editUrlTemplate = "{% url 'edit_assignment' 9999 %}";
+    let deleteUrlTemplate = "{% url 'delete_assignment' 9999 %}";
+
+    function getTaskData(task) {
+      return {
+          id: task.getAttribute('data-task-id'),
+          chair: task.getAttribute('data-task-chair'),
+          customer: task.getAttribute('data-task-customer'),
+          phone: task.getAttribute('data-task-phone'),
+          employee: task.getAttribute('data-task-employee'),
+          service: task.getAttribute('data-task-service'),
+          time: task.getAttribute('data-task-time'),
+          is_done: task.getAttribute('data-task-done') === 'True',
+      };
+    }
+
+    const taskModal = document.getElementById('taskModal');
+    taskModal.addEventListener('show.bs.modal', function(event) {
+        const button = event.relatedTarget;
+        const taskId = button.getAttribute('data-task-id');
+        const modal = this;
+        const task = document.querySelector(`.task[data-task-id="${taskId}"]`);
+        const taskData = getTaskData(task);
+
+        if (taskData.is_done) {
+          document.querySelector('.not-done-buttons').classList.add('d-none');
+          document.querySelector('.pay-button').textContent = 'Print';
+        } else {
+          document.querySelector('.not-done-buttons').classList.remove('d-none');
+          document.querySelector('.pay-button').textContent = 'Payment';
+        }
+
+        this.dataset.taskId = taskId;
+
+        const payButton = document.querySelector('.pay-button');
+        const editButton = document.querySelector('.edit-button');
+        const deleteButton = document.querySelector('.delete-button');
+
+        if (payButton) {
+          payButton.href = payUrlTemplate.replace('9999', taskId);
+        }
+
+        if (editButton) {
+          editButton.href = editUrlTemplate.replace('9999', taskId);
+        }
+
+        if (deleteButton) {
+          deleteButton.href = deleteUrlTemplate.replace('9999', taskId);
+        }
+
+        document.getElementById('task-time').textContent = `Time: ${taskData.time} ${taskData.is_done ? '(Finished)' : '(On Going)'}`;
+        document.getElementById('task-chair').textContent = `Chair Number: ${taskData.chair}`;
+        document.getElementById('task-customer').textContent = `Customer Name: ${taskData.customer}`;
+        document.getElementById('task-phone').textContent = `Phone Number: ${taskData.phone ? taskData.phone : '-'}`;
+        document.getElementById('task-employee').textContent = `Employee in Charge: ${taskData.employee}`;
+        document.getElementById('task-service').textContent = `Service: ${taskData.service}`;
+    });
+  </script>
+{% endblock scripts %}

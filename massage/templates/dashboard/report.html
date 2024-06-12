@@ -46,9 +46,12 @@
       </tbody>
     </table>
   </section>
+{% endblock %}
+{% block scripts %}
+  {{ block.super }}
   <script>
     const filterSubmit = document.getElementById('filter-submit');
     const monthSelect = document.querySelector('.filter-wrapper__month select');
     monthSelect.addEventListener('change', () => filterSubmit.click());
   </script>
-{% endblock %}
+{% endblock scripts %}

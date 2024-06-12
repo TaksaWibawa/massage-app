@@ -92,13 +92,16 @@
       </div>
     {% endif %}
   </section>
+{% endblock content %}
+{% block scripts %}
+  {{ block.super }}
   <script>
     document.getElementById('date').addEventListener('change', function() {
       document.getElementById('filter-submit').click();
     });
-  
+
     document.getElementById('employee').addEventListener('change', function() {
       document.getElementById('filter-submit').click();
     });
   </script>
-{% endblock content %}
+{% endblock scripts %}

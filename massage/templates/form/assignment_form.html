@@ -39,78 +39,79 @@
 {% endblock %}
 
 {% block scripts %}
-<script>
-  document.addEventListener('DOMContentLoaded', function() {
-    const inputs = document.querySelectorAll('input, select');
-    const fields = ['#id_start_date_0', '#id_start_date_1', '#service'];
-    fields.forEach(field => document.querySelector(field).addEventListener('change', enableInputs));
-
-    function toggleInputs(enabled) {
-      const opacity = enabled ? 1 : 0.25;
-      const cursor = enabled ? 'pointer' : 'not-allowed';
-      inputs.forEach(input => {
-        if (!fields.includes(`#${input.id}`)) {
-          input.disabled = !enabled;
-          input.style.opacity = opacity;
-          input.style.cursor = cursor;
-        }
-      });
-    }
-
-    function enableInputs() {
-      const startDate = document.querySelector('#id_start_date_0').value;
-      const startTime = document.querySelector('#id_start_date_1').value;
-      const service = document.querySelector('#service').value;
-      const enabled = startDate && startTime && service;
-      toggleInputs(enabled);
-
-      if (enabled) {
-        const url = new URL("{% url 'get_available_chairs' %}", window.location.origin);
-        url.searchParams.append('start_date', startDate);
-        url.searchParams.append('start_time', startTime);
-        url.searchParams.append('service_id', service);
-
-        if (window.location.pathname.includes('edit')) {
-          const assignmentId = window.location.pathname.split('/')[3];
-          url.searchParams.append('assignment_id', assignmentId);
-        }
-
-        fetch(url, {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-          },
-        })
-        .then(response => response.json())
-        .then(data => {
-          if (data.error) {
-            throw new Error(data.error);
+  {{ block.super}}
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      const inputs = document.querySelectorAll('input, select');
+      const fields = ['#id_start_date_0', '#id_start_date_1', '#service'];
+      fields.forEach(field => document.querySelector(field).addEventListener('change', enableInputs));
+    
+      function toggleInputs(enabled) {
+        const opacity = enabled ? 1 : 0.25;
+        const cursor = enabled ? 'pointer' : 'not-allowed';
+        inputs.forEach(input => {
+          if (!fields.includes(`#${input.id}`)) {
+            input.disabled = !enabled;
+            input.style.opacity = opacity;
+            input.style.cursor = cursor;
           }
-
-          const select = document.querySelector('#chair');
-          const options = select.querySelectorAll('option');
-          options.forEach(option => {
-            if (option.value !== '') {
-              option.remove();
-            }
-          });
-
-          data.available_chairs.forEach(chair => {
-            const option = document.createElement('option');
-            option.value = chair[0];
-            option.text = chair[1];
-            select.appendChild(option);
-          });
-        })
-        .catch((error) => {
-          console.error('Error:', error);
         });
       }
-    }
-
-    toggleInputs(false);
-    enableInputs();
-  });
-</script>
+    
+      function enableInputs() {
+        const startDate = document.querySelector('#id_start_date_0').value;
+        const startTime = document.querySelector('#id_start_date_1').value;
+        const service = document.querySelector('#service').value;
+        const enabled = startDate && startTime && service;
+        toggleInputs(enabled);
+      
+        if (enabled) {
+          const url = new URL("{% url 'get_available_chairs' %}", window.location.origin);
+          url.searchParams.append('start_date', startDate);
+          url.searchParams.append('start_time', startTime);
+          url.searchParams.append('service_id', service);
+        
+          if (window.location.pathname.includes('edit')) {
+            const assignmentId = window.location.pathname.split('/')[3];
+            url.searchParams.append('assignment_id', assignmentId);
+          }
+        
+          fetch(url, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest',
+            },
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.error) {
+              throw new Error(data.error);
+            }
+          
+            const select = document.querySelector('#chair');
+            const options = select.querySelectorAll('option');
+            options.forEach(option => {
+              if (option.value !== '') {
+                option.remove();
+              }
+            });
+          
+            data.available_chairs.forEach(chair => {
+              const option = document.createElement('option');
+              option.value = chair[0];
+              option.text = chair[1];
+              select.appendChild(option);
+            });
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+          });
+        }
+      }
+    
+      toggleInputs(false);
+      enableInputs();
+    });
+  </script>
 {% endblock %}

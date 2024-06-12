@@ -66,19 +66,22 @@
       <button type="submit" class="btn submit-button">Submit</button>
     </form>
   </section>
-  <script>
-      const fileInput = document.getElementById('image-upload');
-      const img = document.querySelector('.file-uploader img');
-      fileInput.addEventListener('change', function() {
-          const file = this.files[0];
-          if (file) {
-              const reader = new FileReader();
-              reader.onload = function() {
-                  img.src = reader.result;
-              }
-              img.style.borderRadius = '50%';
-              reader.readAsDataURL(file);
-          }
-      });
-  </script>
 {% endblock %}
+{% block scripts %}
+  {{ block.super }}
+  <script>
+    const fileInput = document.getElementById('image-upload');
+    const img = document.querySelector('.file-uploader img');
+    fileInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function() {
+                img.src = reader.result;
+            }
+            img.style.borderRadius = '50%';
+            reader.readAsDataURL(file);
+        }
+    });
+  </script>
+{% endblock scripts %}

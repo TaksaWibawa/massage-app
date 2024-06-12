@@ -11,6 +11,7 @@
   </form>
 {% endblock %}
 {% block scripts %}
+  {{ block.super }}
   <script>
     document.getElementById('pay-form').addEventListener('submit', function(event) {
       event.preventDefault();

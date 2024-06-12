@@ -29,10 +29,10 @@ def nav_menus(request):
     elif request.user.groups.filter(name__iexact='supervisor').exists():
         MENU_ITEMS = [
             {
-                "Dashboard": [
+                "Priority": [
                     {"name": "Chart", "url": "chart"},
-                    {"name": "New Assignment", "url": "new_assignment"}
-                ]
+                    {"name": "New Assignment", "url": "new_assignment"},
+                ],
             },
             {
                 "Employee": [
@@ -50,17 +50,17 @@ def nav_menus(request):
     elif request.user.groups.filter(name__iexact='accountant').exists():
         MENU_ITEMS = [
             {
-                "Dashboard": [
+                "Priority": [
                     {"name": "Recap", "url": "recap"},
                     {"name": "Recap History", "url": "recap_history"},
-                    {"name": "Report", "url": "report"},
+                    {"name": "Report", "url": "report"}
                 ]
             }
         ]
     elif request.user.groups.filter(name__iexact='employee').exists():
         MENU_ITEMS = [
             {
-                "Dashboard": [
+                "Priority": [
                     {"name": "Recap", "url": "recap"},
                     {"name": "Recap History", "url": "recap_history"},
                 ]
