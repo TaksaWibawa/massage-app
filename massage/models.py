@@ -60,8 +60,13 @@ class GlobalSettings(models.Model):
     def clean(self):
         if self.type == 'number' and not self.value.isdigit():
             raise ValidationError(_('Value must be a number for type Number'))
-        elif self.type == 'percentage' and (not self.value.isdigit() or not 0 <= int(self.value) <= 100):
-            raise ValidationError(_('Value must be a percentage (0-100) for type Percentage'))
+        elif self.type == 'percentage':
+            try:
+                value = float(self.value)
+                if not 0 <= value <= 100:
+                    raise ValidationError(_('Value must be a percentage (0-100) for type Percentage'))
+            except ValueError:
+                raise ValidationError(_('Value must be a valid number for type Percentage'))
         elif self.type == 'text' and not isinstance(self.value, str):
             raise ValidationError(_('Value must be a text for type Text'))
         elif self.type == 'time':

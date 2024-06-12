@@ -1,4 +1,5 @@
 from datetime import datetime
+from decimal import Decimal
 from django.contrib import messages
 from django.db.models import Sum
 from django.db.models.functions import TruncDay
@@ -11,6 +12,7 @@ from massage.decorator import auth_required, role_required
 from massage.forms import EmployeeFilterForm, MonthFilterForm
 from massage.models import Assignment, Employee, Receipt, EmployeePayment
 from massage.services.recap import generate_recap_pdf
+from massage.utils import get_global_setting
 
 @auth_required
 def LandingPage(request):
@@ -69,25 +71,28 @@ def ReportPage(request):
     filter_form = MonthFilterForm(request.GET or None, initial={'month': datetime.now().month})
     current_year = datetime.now().year
     month = datetime.now().month
+    supervisor_fee = get_global_setting('supervisor fee')
 
     if filter_form.is_valid():
         month = filter_form.cleaned_data.get('month')
 
     revenue_per_day = Receipt.objects.filter(assignment__start_date__year=current_year, assignment__start_date__month=month).annotate(date=TruncDay('assignment__start_date')).values('date').annotate(revenue=Sum('total')).order_by('date')
 
-    cost_per_day = EmployeePayment.objects.filter(receipt__assignment__start_date__year=current_year, receipt__assignment__start_date__month=month).annotate(date=TruncDay('receipt__assignment__start_date')).values('date', 'is_paid', 'total_fee').order_by('date')
+    employee_fee_per_day = EmployeePayment.objects.filter(receipt__assignment__start_date__year=current_year, receipt__assignment__start_date__month=month).annotate(date=TruncDay('receipt__assignment__start_date')).values('date', 'is_paid', 'total_fee').order_by('date')
 
     report = []
     for revenue in revenue_per_day:
-        costs = [cost for cost in cost_per_day if cost['date'] == revenue['date']]
-        total_cost = sum(cost['total_fee'] for cost in costs if cost['is_paid'])
+        costs = [cost for cost in employee_fee_per_day if cost['date'] == revenue['date']]
+        supervisor_fee_amount = revenue['revenue'] * Decimal(supervisor_fee) / 100
+        employee_fee = sum(cost['total_fee'] for cost in costs if cost['is_paid'])
         is_unpaid = any(cost['is_paid'] == False for cost in costs)
 
         report.append({
             'date': revenue['date'].strftime('%d/%m/%Y'),
             'revenue': revenue['revenue'],
-            'cost': 'unpaid' if is_unpaid else total_cost,
-            'nett_revenue': 'unpaid' if is_unpaid else revenue['revenue'] - total_cost
+            'supervisor_fee': supervisor_fee_amount,
+            'employee_fee': 'unpaid' if is_unpaid else employee_fee,
+            'nett_revenue': 'unpaid' if is_unpaid else revenue['revenue'] - employee_fee - supervisor_fee_amount,
         })
 
     return render(request, 'dashboard/report.html', {'report': report, 'filter_form': filter_form})

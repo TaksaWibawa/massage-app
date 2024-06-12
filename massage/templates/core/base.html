@@ -62,7 +62,7 @@
                   {% if key == 'Priority' %}
                     <div class="priority">
                       {% for item in value %}
-                        <a href="{% url item.url %}" class="btn btn-lg btn-info">{{ item.name }}</a>
+                        <a href="{% url item.url %}" class="btn btn-info d-flex align-items-center justify-content-center">{{ item.name }}</a>
                       {% endfor %}
                     </div>
                   {% else %}

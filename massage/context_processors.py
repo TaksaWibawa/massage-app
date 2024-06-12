@@ -87,9 +87,7 @@ def chart_context(request):
     current_time = start_hour
     while current_time <= end_hour:
         TIME_SLOTS.append(current_time.strftime('%I:%M %p'))
-        # increment the current time by the interval
         current_time += timedelta(minutes=interval)
-    print(TIME_SLOTS)
 
     return {'CHAIRS_GROUPED': CHAIRS_GROUPED, 'TIME_SLOTS': TIME_SLOTS, 'CHAIRS': CHAIRS}
 
