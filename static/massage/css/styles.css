@@ -438,6 +438,45 @@ p {
   padding-inline: 24px;
 }
 
+.date-buttons {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.highlight, .date-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  font-size: 14px;
+  align-items: center;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  text-align: center;
+  width: 90px;
+  height: 70px;
+}
+
+.highlight {
+  background-color: #5291ac;
+  color: white;
+}
+
+.date-container {
+  background-color: #f0f0f0;
+  border: 1.5px solid #c3c3c3;
+  color: #1a1918;
+  display: flex;
+}
+
+.date-container:hover {
+  background-color: #5291ac;
+  color: white;
+}
+
 .new-button {
   background-color: #4bd4ff;
   color: #1a1918;

@@ -1,4 +1,7 @@
 {% extends "core/base.html" %}
+{% load i18n %}
+{% get_current_language as LANGUAGE_CODE %}
+{% load templatetags %}
 {% load static %}
 {% block title %}
   Chart
@@ -10,7 +13,24 @@
   <section class="chart-wrapper mt-5">
     <div class="chart-actions">
       <a href="{% url 'new_assignment' %}" class="btn new-button">+ Add Assignment</a>
-      <form method="GET">
+      <div class="date-buttons">
+        {% for i in date_range %}
+          {% language 'en' %}
+            {% if i == 0 %}
+                <div class="highlight">
+                  <div class="date">{{ now|add_days:i|date:'j M' }}</div>
+                  <div class="day">{{ now|add_days:i|date:'D' }}</div>
+                </div>
+            {% else %}
+                <div class="date-container btn" onclick="setDateValue('{{ now|add_days:i|date:'Y-m-d' }}')">
+                  <div class="date">{{ now|add_days:i|date:'j M' }}</div>
+                  <div class="day">{{ now|add_days:i|date:'D' }}</div>
+                </div>
+            {% endif %}
+          {% endlanguage %}
+        {% endfor %}
+      </div>
+      <form method="GET" class="d-flex flex-column gap-3">
         <div class="filter-wrapper">
             <div class="filter-wrapper__date">
               {{ filter_form.date }}
@@ -22,7 +42,7 @@
                 <div class="select-arrow"></div>
               </div>
             </div>
-        </div>
+          </div>
         <input id="filter-submit" type="submit" value="Filter" hidden>
       </form>
     </div>
@@ -160,6 +180,10 @@
 {% block scripts %}
   {{ block.super }}
   <script>
+    window.addEventListener('DOMContentLoaded', function() {
+      document.getElementById('date').value = '{{ now|date:"Y-m-d" }}';
+    });
+
     document.getElementById('date').addEventListener('change', function() {
       document.getElementById('filter-submit').click();
     });
@@ -167,6 +191,11 @@
     document.getElementById('employee').addEventListener('change', function() {
       document.getElementById('filter-submit').click();
     });
+
+    function setDateValue(date) {
+      document.getElementById('date').value = date;
+      document.getElementById('filter-submit').click();
+    }
 
     let payUrlTemplate = "{% url 'receipt' 9999 %}";
     let editUrlTemplate = "{% url 'edit_assignment' 9999 %}";

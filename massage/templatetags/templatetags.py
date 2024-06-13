@@ -1,7 +1,12 @@
-from django import template
+from datetime import timedelta
 from decimal import Decimal
+from django import template
 
 register = template.Library()
+
+@register.filter
+def add_days(value, days):
+    return value + timedelta(days=int(days))
 
 @register.filter
 def sum_list(value, arg):

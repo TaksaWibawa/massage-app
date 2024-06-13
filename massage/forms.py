@@ -344,7 +344,7 @@ class EmployeeFilterForm(forms.Form):
         else:
             self.fields['employee'].queryset = Employee.objects.filter(
                 is_active=True, role__name__iexact='employee')
-
+        
 
 class RecapPaySelectedForm(forms.Form):
     assignment_ids = forms.CharField(

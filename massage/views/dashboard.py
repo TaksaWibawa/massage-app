@@ -64,6 +64,10 @@ def ChartPage(request):
     
     context['filter_form'] = filter_form
 
+    n = 3
+    context['date_range'] = list(range(-n, n+1))
+    context['now'] = selected_date
+
     return render(request, 'dashboard/chart.html', context)
 
 @role_required(allowed_roles=['accountant'])
