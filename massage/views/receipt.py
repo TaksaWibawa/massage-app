@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.core.serializers.json import DjangoJSONEncoder
 from django.http import JsonResponse
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from massage.decorator import role_required, fetch_required
 from massage.forms import AdditionalServicesFormset
@@ -14,6 +14,10 @@ import json
 @role_required(allowed_roles=['supervisor'])
 def ReceiptPage(request, id):
     assignment = get_object_or_404(Assignment, id=id)
+
+    if not assignment.employee:
+        messages.error(request, 'Employee is not assigned to this task')
+        return redirect('chart')
 
     current_date = timezone.localtime().strftime('%d%m%Y')
     last_receipt = Receipt.objects.filter(

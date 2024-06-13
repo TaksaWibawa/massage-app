@@ -154,13 +154,13 @@ def RecapHistoryPage(request):
 
     employee_payments = EmployeePayment.objects.filter(
         receipt__assignment__start_date__date__lte=selected_date,
-        is_paid=True
     ).order_by('receipt__assignment__employee')
 
     if employee:
         employee_payments = employee_payments.filter(receipt__assignment__employee=employee)
 
     if request.method == 'POST':
+        employee_payments = employee_payments.filter(is_paid=True)
         response = generate_recap_pdf(selected_date, employee_payments)
 
         if response.status_code == 200:

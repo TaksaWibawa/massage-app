@@ -48,7 +48,7 @@
     
       function toggleInputs(enabled) {
         const opacity = enabled ? 1 : 0.25;
-        const cursor = enabled ? 'pointer' : 'not-allowed';
+        const cursor = enabled ? '' : 'not-allowed';
         inputs.forEach(input => {
           if (!fields.includes(`#${input.id}`)) {
             input.disabled = !enabled;

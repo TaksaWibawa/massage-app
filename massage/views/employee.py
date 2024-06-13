@@ -1,5 +1,5 @@
 from massage.models import Employee
-from massage.forms import CreateUserForm, EmployeeForm, ChangePasswordForm
+from massage.forms import CreateUserForm, EmployeeForm, ChangePasswordForm, EmployeeStatusFilterForm
 from massage.decorator import role_required
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.models import Group
@@ -7,8 +7,20 @@ from django.contrib import messages
 
 @role_required(allowed_roles=['supervisor'])
 def EmployeeListPage(request):
-    employees = Employee.objects.filter(role__name__iexact='employee')
-    return render(request, 'employees/employee_list.html', {'employees': employees})
+    form = EmployeeStatusFilterForm(request.GET)
+    employees = Employee.objects.filter(role__name__iexact='employee').order_by('-is_active')
+    employee_id = request.POST.get('employee_id')
+
+    if 'status' in request.GET and request.GET['status'] != '':
+        employees = employees.filter(is_active=request.GET['status'] == 'True')
+
+    if request.POST and employee_id:
+        employee = get_object_or_404(Employee, id=employee_id)
+        if 'is_active' in request.POST and request.POST['is_active'] != '':
+            employee.is_active = request.POST['is_active'] == 'True'
+            employee.save()
+
+    return render(request, 'employees/employee_list.html', {'employees': employees, 'form': form})
 
 
 @role_required(allowed_roles=['supervisor'])

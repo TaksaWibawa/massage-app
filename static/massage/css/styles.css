@@ -69,6 +69,7 @@ p {
 .section-wrapper {
   display: flex;
   flex-direction: column;
+  width: 100%;
   gap: 24px;
 }
 
@@ -201,19 +202,23 @@ p {
 .list-wrapper {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 32px;
+  width: max-content;
+  max-width: 50%;
+  margin: auto;
 }
 
 .info-card {
   display: grid;
   grid-template-columns: auto 1fr;
-  column-gap: 24px;
-  align-items: center;
+  gap: 48px;
+  width: 100%;
 }
 
 .info-card-image,
 .info-card-service {
-  width: 120px;
+  width: 200px;
   height: auto;
 }
 
@@ -485,6 +490,23 @@ p {
   text-align: center;
   width: fit-content;
   margin: auto;
+}
+
+.section-header {
+  align-items: center;
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  margin-bottom: 32px;
+}
+
+.section-header .new-button {
+  margin: 0;
+}
+
+.divider {
+  width: 100%;
+  background-color: black;
 }
 
 .content-group {

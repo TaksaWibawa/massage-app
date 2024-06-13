@@ -242,12 +242,10 @@ class AssignmentForm(forms.ModelForm):
             start_date__lt=end_date,
             end_date__gt=start_date,
         )
-
+    
         overlapping_chair_assignment = overlapping_assignments_query.filter(
             chair=chair).first()
-        overlapping_employee_assignment = overlapping_assignments_query.filter(
-            employee=employee).first()
-
+    
         if overlapping_chair_assignment:
             start_date_str = timezone.localtime(
                 overlapping_chair_assignment.start_date).strftime('%H:%M')
@@ -258,15 +256,19 @@ class AssignmentForm(forms.ModelForm):
                 'chair', f'Chair taken from {start_date_str} to {end_date_str}.')
             self.add_error(
                 'start_date', f'Time slot taken from {start_date_str} to {end_date_str}.')
-
-        if overlapping_employee_assignment:
-            start_date_str = timezone.localtime(
-                overlapping_employee_assignment.start_date).strftime('%H:%M')
-            end_date = timezone.localtime(
-                overlapping_employee_assignment.end_date)
-            end_date_str = end_date.strftime('%H:%M')
-            self.add_error(
-                'employee', f'Employee booked from {start_date_str} to {end_date_str}.')
+    
+        if employee:
+            overlapping_employee_assignment = overlapping_assignments_query.filter(
+                employee=employee).first()
+    
+            if overlapping_employee_assignment:
+                start_date_str = timezone.localtime(
+                    overlapping_employee_assignment.start_date).strftime('%H:%M')
+                end_date = timezone.localtime(
+                    overlapping_employee_assignment.end_date)
+                end_date_str = end_date.strftime('%H:%M')
+                self.add_error(
+                    'employee', f'Employee booked from {start_date_str} to {end_date_str}.')
 
     def clean(self):
         cleaned_data = super().clean()
@@ -318,7 +320,30 @@ AdditionalServicesFormset = forms.formset_factory(
     max_num=3
 )
 
+class EmployeeStatusFilterForm(forms.Form):
+    STATUS_CHOICES = [
+        ('', '-----'),
+        (True, 'Active'),
+        (False, 'Inactive'),
+    ]
+    status = forms.ChoiceField(choices=STATUS_CHOICES, required=False, widget=forms.Select(
+        attrs={'class': 'form-control form-select', 'id': 'status'}))
 
+    def __init__(self, *args, **kwargs):
+        super(EmployeeStatusFilterForm, self).__init__(*args, **kwargs)
+
+
+class ServiceStatusFilterForm(forms.Form):
+    STATUS_CHOICES = [
+        ('', '-----'),
+        (True, 'Active'),
+        (False, 'Inactive'),
+    ]
+    status = forms.ChoiceField(choices=STATUS_CHOICES, required=False, widget=forms.Select(
+        attrs={'class': 'form-control form-select', 'id': 'status'}))
+
+    def __init__(self, *args, **kwargs):
+        super(ServiceStatusFilterForm, self).__init__(*args, **kwargs)
 class MonthFilterForm(forms.Form):
     MONTH_CHOICES = [(i, calendar.month_name[i]) for i in range(1, 13)]
     month = forms.ChoiceField(choices=MONTH_CHOICES, required=False, widget=forms.Select(

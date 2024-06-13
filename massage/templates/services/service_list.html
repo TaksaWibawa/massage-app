@@ -9,6 +9,13 @@
 {% endblock pageTitle %}
 {% block content %}
   <section class="section-wrapper justify-content-start mt-5 px-3">
+    <div class="section-header">
+      <a href="{% url 'service_new' %}" class="btn new-button">+ Add New Service</a>
+      <form method="get" class="status-filter-form">
+        {{ form.status }}
+        <input type="submit" class="d-none" value="Filter">
+      </form>
+    </div>
     <ul class="list-wrapper">
       {% if services %}
         {% for service in services %}
@@ -22,18 +29,24 @@
               {% endif %}
             </div>
             <div class="info-card-content">
-              <h2>{{ service.name }}</h2>
+              <h2>{{ service.name|truncatechars:10 }}</h2>
               <p>{{ service.price|currency }}</p>
               <p>{{ service.duration }} mins.</p>
               <div class="info-card-actions">
                 <a href="{% url 'service_edit' service.id %}" class="btn edit-button">Edit</a>
-                <div class="{% if service.is_active %}active{% else %}inactive{% endif %}">
-                  {% if service.is_active %}
-                    Active
-                  {% else %}
-                    Inactive
-                  {% endif %}
-                </div>
+                <form method="post" class="d-inline" id="toggle-active-form-{{ service.id }}">
+                  {% csrf_token %}
+                  <button class="btn pay-button {% if service.is_active %}active{% else %}inactive{% endif %}" id="toggle-active-button-{{ service.id }}">
+                    {% if service.is_active %}
+                      Active
+                    {% else %}
+                      Inactive
+                    {% endif %}
+                  </button>
+                  <input type="hidden" name="is_active" value="{% if service.is_active %}False{% else %}True{% endif %}">
+                  <input type="hidden" name="service_id" value="{{ service.id }}">
+                  <button type="submit" class="d-none">Submit</button>
+                </form>
               </div>
             </div>
           </li>
@@ -43,4 +56,12 @@
       {% endif %}
     </ul>
   </section>
+{% endblock %}
+{% block scripts %}
+  <script>
+    const statusFilter = document.querySelector('.status-filter-form select');
+    statusFilter.addEventListener('change', function() {
+      this.form.submit();
+    });    
+  </script>
 {% endblock %}
