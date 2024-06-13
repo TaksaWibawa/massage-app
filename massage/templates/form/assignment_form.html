@@ -113,5 +113,9 @@
       toggleInputs(false);
       enableInputs();
     });
+
+    document.getElementById('id_start_date_1').addEventListener('input', function (event) {
+      event.target.blur();
+    });
   </script>
 {% endblock %}
