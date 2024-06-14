@@ -242,10 +242,10 @@ class AssignmentForm(forms.ModelForm):
             start_date__lt=end_date,
             end_date__gt=start_date,
         )
-    
+
         overlapping_chair_assignment = overlapping_assignments_query.filter(
             chair=chair).first()
-    
+
         if overlapping_chair_assignment:
             start_date_str = timezone.localtime(
                 overlapping_chair_assignment.start_date).strftime('%H:%M')
@@ -256,11 +256,11 @@ class AssignmentForm(forms.ModelForm):
                 'chair', f'Chair taken from {start_date_str} to {end_date_str}.')
             self.add_error(
                 'start_date', f'Time slot taken from {start_date_str} to {end_date_str}.')
-    
+
         if employee:
             overlapping_employee_assignment = overlapping_assignments_query.filter(
-                employee=employee).first()
-    
+                employee=employee).exclude(is_done=True).first()
+
             if overlapping_employee_assignment:
                 start_date_str = timezone.localtime(
                     overlapping_employee_assignment.start_date).strftime('%H:%M')
@@ -320,6 +320,7 @@ AdditionalServicesFormset = forms.formset_factory(
     max_num=3
 )
 
+
 class EmployeeStatusFilterForm(forms.Form):
     STATUS_CHOICES = [
         ('', '-----'),
@@ -344,6 +345,8 @@ class ServiceStatusFilterForm(forms.Form):
 
     def __init__(self, *args, **kwargs):
         super(ServiceStatusFilterForm, self).__init__(*args, **kwargs)
+
+
 class MonthFilterForm(forms.Form):
     MONTH_CHOICES = [(i, calendar.month_name[i]) for i in range(1, 13)]
     month = forms.ChoiceField(choices=MONTH_CHOICES, required=False, widget=forms.Select(
@@ -369,7 +372,27 @@ class EmployeeFilterForm(forms.Form):
         else:
             self.fields['employee'].queryset = Employee.objects.filter(
                 is_active=True, role__name__iexact='employee')
-        
+
+
+class RecapHistoryFilterForm(forms.Form):
+    employee = forms.ModelChoiceField(queryset=None, required=False,
+                                      widget=forms.Select(attrs={'class': 'form-control form-select', 'id': 'employee'}))
+    start_date = forms.DateField(required=False, widget=forms.DateInput(
+        attrs={'class': 'form-control', 'type': 'date', 'id': 'start_date'}))
+    end_date = forms.DateField(required=False, widget=forms.DateInput(
+        attrs={'class': 'form-control', 'type': 'date', 'id': 'end_date'}))
+
+    def __init__(self, *args, **kwargs):
+        request = kwargs.pop('request', None)
+        super(RecapHistoryFilterForm, self).__init__(*args, **kwargs)
+
+        if request and request.user.groups.filter(name__iexact='employee').exists():
+            self.fields['employee'].queryset = Employee.objects.filter(
+                user=request.user, is_active=True, role__name__iexact='employee')
+        else:
+            self.fields['employee'].queryset = Employee.objects.filter(
+                is_active=True, role__name__iexact='employee')
+
 
 class RecapPaySelectedForm(forms.Form):
     assignment_ids = forms.CharField(

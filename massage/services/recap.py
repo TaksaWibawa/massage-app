@@ -6,6 +6,9 @@ def generate_recap_pdf(date, employee_payments):
     try:
         if isinstance(date, datetime):
             date = datetime.strptime(date, '%Y-%m-%d')
+
+        if date.get('start_date') and date.get('end_date'):
+            date = f"{date['start_date']}-{date['end_date']}"
             
         data = {
             'date': date,

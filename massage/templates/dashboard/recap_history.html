@@ -12,7 +12,11 @@
     <form method="GET">
       <div class="filter-wrapper">
           <div class="filter-wrapper__date">
-            {{ filter_form.date }}
+            {{ filter_form.start_date }}
+          </div>
+          -
+          <div class="filter-wrapper__date">
+            {{ filter_form.end_date }}
           </div>
           <div class="filter-wrapper__employee">
             <div class="select-wrapper">
@@ -127,10 +131,37 @@
       });
     });
 
-    document.getElementById('date').addEventListener('change', function() {
+    window.addEventListener('DOMContentLoaded', function() {
+      const startDate = document.getElementById('start_date').value;
+      document.getElementById('end_date').setAttribute('min', startDate);
+    });
+    
+    document.getElementById('start_date').addEventListener('change', function() {
+      const startDate = this.value;
+      const endDateField = document.getElementById('end_date');
+    
+      endDateField.setAttribute('min', startDate);
+    
+      if (endDateField.value < startDate) {
+        endDateField.value = startDate;
+      }
+    
       document.getElementById('filter-submit').click();
     });
-
+    
+    document.getElementById('end_date').addEventListener('change', function() {
+      const endDate = this.value;
+      const startDateField = document.getElementById('start_date');
+    
+      startDateField.setAttribute('max', endDate);
+    
+      if (startDateField.value > endDate) {
+        startDateField.value = endDate;
+      }
+    
+      document.getElementById('filter-submit').click();
+    });
+    
     document.getElementById('employee').addEventListener('change', function() {
       document.getElementById('filter-submit').click();
     });

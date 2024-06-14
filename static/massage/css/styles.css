@@ -730,7 +730,7 @@ p {
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 24px;
+  gap: 12px;
   width: 100%;
 }
 

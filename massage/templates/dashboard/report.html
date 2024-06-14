@@ -21,33 +21,42 @@
     </form>
     <table class="report__table">
       <thead>
+        {% if report %}
+          <tr>
+            <th style="padding-bottom: 20px; font-size: 20px;">Total</th>
+            <th style="padding-bottom: 20px; font-size: 20px;">{{ summary.revenue|currency_format_dot }}</th>
+            <th style="padding-bottom: 20px; font-size: 20px;">{{ summary.supervisor_fee|currency_format_dot }}</th>
+            <th style="padding-bottom: 20px; font-size: 20px;">{{ summary.employee_fee|currency_format_dot }}</th>
+            <th style="padding-bottom: 20px; font-size: 20px;">{{ summary.nett_revenue|currency_format_dot }}</th>
+          </tr>
+        {% endif %}
         <tr>
-          <th>Date</th>
-          <th>Revenue</th>
-          <th>Supervisor Fee</th>
-          <th>Employee Fee</th>
-          <th>Nett Revenue</th>
+          <th style="font-size: 16px; font-weight: 600; padding-top: 20px;">Date</th>
+          <th style="font-size: 16px; font-weight: 600; padding-top: 20px;">Revenue</th>
+          <th style="font-size: 16px; font-weight: 600; padding-top: 20px;">Supervisor Fee</th>
+          <th style="font-size: 16px; font-weight: 600; padding-top: 20px;">Employee Fee</th>
+          <th style="font-size: 16px; font-weight: 600; padding-top: 20px;">Nett Revenue</th>
         </tr>
       </thead>
       <tbody>
       {% if report %}
         {% for item in report %}
           <tr>
-            <td><span>{{ item.date }}</span></td>
-            <td><span>{{ item.revenue|currency_format_dot }}</span></td>
-            <td><span>{{ item.supervisor_fee|currency_format_dot }}</span></td>
-            <td>
+            <td style="font-size: 14px;">{{ item.date }}</td>
+            <td style="font-size: 14px;">{{ item.revenue|currency_format_dot }}</td>
+            <td style="font-size: 14px;">{{ item.supervisor_fee|currency_format_dot }}</td>
+            <td style="font-size: 14px;">
               {% if item.employee_fee == 'unpaid' %}
-                <span>Unpaid</span>
+                Unpaid
               {% else %}
-                <span>{{ item.employee_fee|currency_format_dot }}</span>
+                {{ item.employee_fee|currency_format_dot }}
               {% endif %}
             </td>
-            <td>
+            <td style="font-size: 14px;">
               {% if item.nett_revenue == 'unpaid' %}
-                <span>{{ item.revenue|currency_format_dot }} (Unpaid)</span>
+                {{ item.revenue|currency_format_dot }} (Unpaid)
               {% else %}
-                <span>{{ item.nett_revenue|currency_format_dot }}</span>
+                {{ item.nett_revenue|currency_format_dot }}
               {% endif %}
             </td>
           </tr>
