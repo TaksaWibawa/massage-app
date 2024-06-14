@@ -108,9 +108,9 @@ def ReportPage(request):
             'nett_revenue': nett_revenue,
         })
 
+        total_revenue += revenue['revenue']
+        total_supervisor_fee += supervisor_fee_amount
         if not is_unpaid:
-            total_revenue += revenue['revenue']
-            total_supervisor_fee += supervisor_fee_amount
             total_employee_fee += employee_fee
             total_nett_revenue += nett_revenue
 
